@@ -186,7 +186,7 @@ class RaceSimulation(tf_agents.environments.py_environment.PyEnvironment):
 
         self._observation_spec = tf_agents.specs.array_spec.\
             BoundedArraySpec(shape=(17 + len(self.available_compounds) + len(self.all_driver_initials),),
-                             dtype=np.float32,
+                             dtype=np.float64,
                              minimum=0.0,
                              maximum=1.0,
                              name='observation')
@@ -460,7 +460,7 @@ class RaceSimulation(tf_agents.environments.py_environment.PyEnvironment):
         # CREATE OBSERVATION -------------------------------------------------------------------------------------------
         # --------------------------------------------------------------------------------------------------------------
 
-        observation = np.zeros(4 + self.cat_preprocessor.no_transf_cols, dtype=np.float32)
+        observation = np.zeros(4 + self.cat_preprocessor.no_transf_cols, dtype=np.float64)
 
         # preprocessing (numerical features)
         observation[0] = cur_lap / self.race.race_pars["tot_no_laps"]
@@ -536,7 +536,7 @@ class RaceSimulation(tf_agents.environments.py_environment.PyEnvironment):
 
         return reward
 
-    def __calculate_reward_position(self, delta_position: np.int32) -> np.float:
+    def __calculate_reward_position(self, delta_position: np.int32) -> np.float64:
         """
         This method returns an reward of +5.0/-5.0 for each position the driver won/lost until the next pit stop
         decision.

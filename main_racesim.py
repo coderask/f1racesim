@@ -1,7 +1,7 @@
 import racesim
 import helper_funcs
 from racesim.src.race_handle import race_handle
-from concurrent import futures  # required for parallel computing
+from concurrent import futures  # required for parallelp computing
 import numpy as np
 import time
 import os
@@ -258,7 +258,7 @@ if __name__ == '__main__':
     # ------------------------------------------------------------------------------------------------------------------
 
     # set race parameter file names
-    race_pars_file_ = 'pars_Spielberg_2019.ini'
+    race_pars_file_ = 'pars_Catalunya_2019.ini'
     mcs_pars_file_ = 'pars_mcs.ini'
 
     # set simulation options
@@ -291,3 +291,4 @@ if __name__ == '__main__':
     main(sim_opts=sim_opts_,
          race_pars_file=race_pars_file_,
          mcs_pars_file=mcs_pars_file_)
+    
