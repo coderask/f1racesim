@@ -65,7 +65,11 @@ class VSE(object):
         # initialize known variables (avail_dry_compounds should be solely used for the compound choice NN!)
         self.vse_pars = vse_pars
         self.avail_dry_compounds = [x for x in self.vse_pars["available_compounds"] if x not in ["I", "W"]]
+        #print("Available dry compounds:")
+        #print(self.avail_dry_compounds)
         self.param_dry_compounds = self.vse_pars["param_dry_compounds"]
+        #print("Parameter dry compounds:")
+        #print(self.param_dry_compounds)
 
         # initialize unknown variables (they are set during the first call of the decide_pitstop method)
         self.idxs_driver_supervised = None
@@ -179,7 +183,7 @@ class VSE(object):
     def __get_idxs_driver_supervised(self) -> list: return self.__idxs_driver_supervised
     def __set_idxs_driver_supervised(self, x: list) -> None: self.__idxs_driver_supervised = x
     idxs_driver_supervised = property(__get_idxs_driver_supervised, __set_idxs_driver_supervised)
-
+    
     def __get_idxs_driver_reinf(self) -> list: return self.__idxs_driver_reinf
     def __set_idxs_driver_reinf(self, x: list) -> None: self.__idxs_driver_reinf = x
     idxs_driver_reinf = property(__get_idxs_driver_reinf, __set_idxs_driver_reinf)
@@ -285,6 +289,8 @@ class VSE(object):
                        t_pitdrive_outlap_fcy: float,
                        t_pitdrive_inlap_sc: float,
                        t_pitdrive_outlap_sc: float) -> list:
+        
+      
         """
         .. inputs::
         :param driver_initials:         List with driver initials (must be in the same order as the remaining inputs)
@@ -352,6 +358,14 @@ class VSE(object):
         if self.idxs_driver_supervised is None:
             self.idxs_driver_supervised = [idx for idx, initials in enumerate(driver_initials)
                                            if self.vse_pars["vse_type"][initials] == 'supervised']
+            #print("vse py index, intials")
+            #print(driver_initials)
+
+        #print("")
+        #print("***********************************")
+        #print("idxs_driver_supervised is")
+        #print(self.idxs_driver_supervised)
+        #print("***********************************")    
 
         if self.idxs_driver_reinf is None:
             self.idxs_driver_reinf = [idx for idx, initials in enumerate(driver_initials)
@@ -441,6 +455,8 @@ class VSE(object):
         remainingtirechanges_curlap = \
             [len(self.vse_pars["base_strategy"][initials]) - 1 - no_past_tirechanges[idx_driver]
              for idx_driver, initials in enumerate(driver_initials)]
+        #print("remaningTireChanges:")
+        #print(remainingtirechanges_curlap)
 
         if any(True if x > 3 else False for x in remainingtirechanges_curlap):
             raise RuntimeError("The NNs are trained for a maximum of 3 pit stops per race, reduce desired number of"
@@ -608,6 +624,20 @@ class VSE(object):
                 no_avail_dry_compounds=len(self.avail_dry_compounds))
 
             # decision making (returns a list with an entry for every driver in idxs_driver_supervised)
+            '''print("driving")
+            print(bool_driving[self.idxs_driver_supervised])
+            print("available compounds")
+            print(self.avail_dry_compounds)
+            print("dry compounds")
+            print(self.param_dry_compounds)
+            print("remaining tire changes")
+            print(remainingtirechanges_curlap)
+            print("used 2 compounds")
+            print(used_2compounds)
+            print("current compounds")
+            print(cur_compounds)
+            print("race progress previous lap")
+            print(cur_lap / tot_no_laps)'''
             next_compounds_tmp = self.vse_supervised.make_decision(
                 bool_driving=bool_driving[self.idxs_driver_supervised],
                 avail_dry_compounds=self.avail_dry_compounds,
@@ -615,7 +645,21 @@ class VSE(object):
                 remainingtirechanges_curlap=[remainingtirechanges_curlap[idx] for idx in self.idxs_driver_supervised],
                 used_2compounds=[used_2compounds[idx] for idx in self.idxs_driver_supervised],
                 cur_compounds=[cur_compounds[idx] for idx in self.idxs_driver_supervised],
-                raceprogress_prevlap=(cur_lap - 1) / tot_no_laps)
+                raceprogress_prevlap=(cur_lap - 1) / tot_no_laps,
+                driver_intials= [driver_initials[idx] for idx in self.idxs_driver_supervised],
+                position= positions_prevlap)
+            #self.vse_supervised.trainTyreModel(
+                #bool_driving=bool_driving[self.idxs_driver_supervised],
+                #avail_dry_compounds=self.avail_dry_compounds,
+                #param_dry_compounds=self.param_dry_compounds,
+                #remainingtirechanges_curlap=[remainingtirechanges_curlap[idx] for idx in self.idxs_driver_supervised],
+                #used_2compounds=[used_2compounds[idx] for idx in self.idxs_driver_supervised],
+                #cur_compounds=[cur_compounds[idx] for idx in self.idxs_driver_supervised],
+                #raceprogress_prevlap=(cur_lap - 1) / tot_no_laps, 
+                #driver_intials= [driver_initials[idx] for idx in self.idxs_driver_supervised],
+               #positions= positions_prevlap)
+            
+            #print(self.vse_supervised.collected_data)
 
             for idx_rel, idx_abs in enumerate(self.idxs_driver_supervised):
                 if next_compounds_tmp[idx_rel] is not None:
@@ -689,7 +733,7 @@ class VSE(object):
             for idx_rel, idx_abs in enumerate(self.idxs_driver_real):
                 if next_compounds_tmp[idx_rel] is not None:
                     next_compounds[idx_abs] = next_compounds_tmp[idx_rel]
-
+            
         # --------------------------------------------------------------------------------------------------------------
         # UPDATE CACHES FOR NEXT LAP -----------------------------------------------------------------------------------
         # --------------------------------------------------------------------------------------------------------------
@@ -757,7 +801,7 @@ class VSE(object):
                                  mult_tiredeg_sc: float = 0.25) -> list:
 
         """
-        This method is intended to determine a basic strategy with the VSE for the pre-simulation such that it resembles
+        This method is intended to determine as basic strategy with the VSE for the pre-simulation such that it resembles
         the behavior of the VSE in the race. Equally to the pre-simulation, this method only works with FCY phases in
         the progress domain.
 

@@ -1,11 +1,9 @@
 import pickle
 import numpy as np
 import tensorflow as tf
-import os
-import configparser
-import ast
+
+
 class VSE_SUPERVISED(object):
-    
     """
     author:
     Alexander Heilmeier
@@ -24,29 +22,15 @@ class VSE_SUPERVISED(object):
     # ------------------------------------------------------------------------------------------------------------------
     # SLOTS ------------------------------------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------------------------------------------
-    
+
     __slots__ = ("__preprocessor_cc",
                  "__preprocessor_tc",
                  "__nnmodel_cc",
                  "__nnmodel_tc",
                  "__X_conv_cc",
                  "__X_conv_tc",
-                 "__no_timesteps_tc",
-                 "collected_data")
+                 "__no_timesteps_tc")
 
-
-    #extracting required race file
-    path = "/Users/aarnavkoushik/Documents/GitHub/f1racesim/racesim/input/parameters/pars_Catalunya_2019.ini"
-    config = configparser.ConfigParser()
-    config.read(path)
-    driver_pars_section = config['DRIVER_PARS']
-    global driver_pars_dict 
-    driver_pars_dict= {}
-    for key in driver_pars_section:
-        driver_pars_dict[key] = ast.literal_eval(driver_pars_section[key])
-    print("driver_pars_dict:", driver_pars_dict['driver_pars']["HAM"])
-    #intialzing and compiling model 
-    
     # ------------------------------------------------------------------------------------------------------------------
     # CONSTRUCTOR ------------------------------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------------------------------------------
@@ -68,6 +52,7 @@ class VSE_SUPERVISED(object):
 
         self.X_conv_cc = None
         self.X_conv_tc = None
+
         # initialize tf lite interpreters
         self.nnmodel_cc["interpreter"].allocate_tensors()
         self.nnmodel_cc["input_index"] = self.nnmodel_cc["interpreter"].get_input_details()[0]['index']
@@ -78,13 +63,6 @@ class VSE_SUPERVISED(object):
         self.nnmodel_tc["output_index"] = self.nnmodel_tc["interpreter"].get_output_details()[0]['index']
 
         self.no_timesteps_tc = self.nnmodel_tc["interpreter"].get_input_details()[0]['shape'][1]
-
-
-        #aarnav added code
-        #collect all IO from their regular use of tf-lite models
-        self.collected_data = {"inputs": [], "outputs": []}
-        #set up the race file
-
 
     # ------------------------------------------------------------------------------------------------------------------
     # GETTERS / SETTERS ------------------------------------------------------------------------------------------------
@@ -117,6 +95,7 @@ class VSE_SUPERVISED(object):
     def __get_no_timesteps_tc(self) -> int: return self.__no_timesteps_tc
     def __set_no_timesteps_tc(self, x: int) -> None: self.__no_timesteps_tc = x
     no_timesteps_tc = property(__get_no_timesteps_tc, __set_no_timesteps_tc)
+
     # ------------------------------------------------------------------------------------------------------------------
     # METHODS ----------------------------------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------------------------------------------
@@ -160,16 +139,9 @@ class VSE_SUPERVISED(object):
         X[:, 6] = tirechange_pursuer
         X[:, 7] = location_cat
         X[:, 8] = close_ahead_prevlap
-        
-        #print("position passed to VSE SUPERVISED: ", position)
-        #print out all raw input data 
-        #print("Raw input data for CC decision:")
-        #print("raceprogress:", raceprogress)
-        #print("location:", location)
-        #print("rel_compound_num_nl:", rel_compound_num_nl)
-        #print("remainingtirechanges_nl:", remainingtirechanges_nl)
-        #print("used_2compounds_nl:", used_2compounds_nl)
-        #print("no_avail_dry_compounds:", no_avail_dry_compounds)
+
+        print(X)
+
         # --------------------------------------------------------------------------------------------------------------
         # FEATURE PREPROCESSING (TIRE CHANGE DECISION) -----------------------------------------------------------------
         # --------------------------------------------------------------------------------------------------------------
@@ -215,7 +187,6 @@ class VSE_SUPERVISED(object):
 
         # process new features
         self.X_conv_cc = self.preprocessor_cc.transform(X, dtype_out=np.float32)
-    
 
     def make_decision(self,
                       bool_driving: list or np.ndarray,
@@ -224,9 +195,7 @@ class VSE_SUPERVISED(object):
                       remainingtirechanges_curlap: list,
                       used_2compounds: list,
                       cur_compounds: list,
-                      raceprogress_prevlap: float,
-                      position: list,
-                      driver_intials: str) -> list:
+                      raceprogress_prevlap: float) -> list:
 
         # get number of drivers and create output list
         no_drivers_tmp = self.X_conv_tc.shape[0]
@@ -247,14 +216,13 @@ class VSE_SUPERVISED(object):
             # set NN input
             self.nnmodel_tc["interpreter"].set_tensor(self.nnmodel_tc["input_index"],
                                                       np.expand_dims(self.X_conv_tc[idx_driver], axis=0))
-            
+
             # invoke NN
             self.nnmodel_tc["interpreter"].invoke()
 
             # fetch NN output
             pitstop_probs[idx_driver] = self.nnmodel_tc["interpreter"].get_tensor(self.nnmodel_tc["output_index"])
 
-            
         # get indices of the drivers that have a predicted pitstop probability above 50%
         idxs_driver_pitstop = list(np.flatnonzero(np.round(pitstop_probs)))
 
@@ -277,70 +245,22 @@ class VSE_SUPERVISED(object):
 
         # compound choice is only performed if any driver was chosen for a pit stop
         if idxs_driver_pitstop:
-            #print("list of drivers chosen for pitstop:", idxs_driver_pitstop)
+            print("hello world")
             # create array for prediction probabilities (NN was trained with 3 different compounds to choose from)
             rel_compound_probs = np.zeros((len(idxs_driver_pitstop), 3), dtype=np.float32)
-            '''print("model INput")
-            print(self.X_conv_cc)'''
-            #print("model Input shape")
-            #print(self.X_conv_cc.shape)
+        
             for idx_rel, idx_abs in enumerate(idxs_driver_pitstop):
                 # set NN input
-                #print("SET NN INPUT")
                 self.nnmodel_cc["interpreter"].set_tensor(self.nnmodel_cc["input_index"],
                                                           np.expand_dims(self.X_conv_cc[idx_abs], axis=0))
-                #print("expanded dims shape")
-                #print(np.expand_dims(self.X_conv_cc[idx_abs], axis = 0).shape)
-                #add input to the array
-                self.collected_data["inputs"].append(self.X_conv_cc[idx_driver])
-                #newModel
-                #print("")
-                #print("")
-                #print(idx_abs)
-                #print("This is the input being passed to the Model:", np.expand_dims(self.X_conv_cc[idx_abs], axis=0) )
-                #print("aarnav newmodel started intializing ")
-                '''
-                newModel = tf.keras.models.Sequential([
-                tf.keras.layers.Input(shape=(np.expand_dims(self.X_conv_cc[idx_abs],axis=0).shape[1],)),  # Input layer with the flattened shape
-                tf.keras.layers.Dense(32, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.001)),
-                tf.keras.layers.Dense(3, activation='softmax')
-                ])          
-                #print("newmodel compiling")
-                newModel.compile(optimizer=tf.keras.optimizers.Nadam(), loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])
-                #print("sucessful compile")
 
-                #print("newmodel fit")
-
-                input_data = np.expand_dims(self.X_conv_cc[idx_abs], axis=0)
-                #print(f"Input data shape for idx_abs {idx_abs}: {input_data.shape}")
-                
-                # Ensure input data is a NumPy array
-                labels = [0,0.15,0.85]
-                input_data = np.array(input_data, dtype=np.float32)
-                label = np.array([labels[idx_rel]], dtype=np.float32)
-
-                # Fit the model
-                newModel.fit(input_data, label, epochs=1, validation_data=(input_data, label))
-                
-                # Predict probabilities
-                print("newModel preds. : ")
-                print("    index: ", idx_rel)
-                print("predicition:", newModel.predict(input_data))
-                '''
-
-                
                 # invoke NN
                 self.nnmodel_cc["interpreter"].invoke()
-                
+
                 # fetch NN output
-                #print("")
-                #print("this is the output of the network:")
-                #print(rel_compound_probs)
-                #print(self.nnmodel_cc["interpreter"].get_tensor(self.nnmodel_cc["output_index"]))
                 rel_compound_probs[idx_rel] = \
                     self.nnmodel_cc["interpreter"].get_tensor(self.nnmodel_cc["output_index"])
-                #self.collected_data["outputs"].append(rel_compound_probs[idx_rel])
-                #print("their prediction: ", rel_compound_probs[idx_rel])
+
             # get array with indices of relative compounds sorted by highest -> lowest probability
             idxs_rel_compound_sorted = list(np.argsort(-rel_compound_probs, axis=1))
 
@@ -382,48 +302,9 @@ class VSE_SUPERVISED(object):
                     # set new compound
                     next_compounds[idx_abs] = avail_dry_compounds[idx_rel_compound_corr]
                     break
-        #AARNAV MODEL START 
-        
-        #print("I to the model", self.collected_data["inputs"])
-        #driverchoices = [["A4", "A3", "A4"], ]
-        #print("O of the model", self.collected_data["outputs"])
-        return next_compounds
-    def trainTyreModel(self,
-                      bool_driving: list or np.ndarray,
-                      avail_dry_compounds: list,
-                      param_dry_compounds: list,
-                      remainingtirechanges_curlap: list,
-                      used_2compounds: list,
-                      cur_compounds: list,
-                      raceprogress_prevlap: float,
-                      driver_intials: str,
-                      positions: list):
-        #print(i)
-        #i+=1
-        #define model
-        newModel = tf.keras.models.Sequential([
-                tf.keras.layers.Input(shape=(34,)),  # Input layer with the flattened shape
-                tf.keras.layers.Dense(32, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.001)),
-                tf.keras.layers.Dense(3, activation='softmax')
-                ]) 
-        #compile model
-        newModel.compile(optimizer=tf.keras.optimizers.Nadam(), loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])       
 
-        #print("driver initals given to trainTyreMOdel:", driver_intials)
-        #print("lastlap_positions:", positions)
-        #train model 
-        #convert position and name into a dicitonary 
-        newDict = {}
-        i=0
-        for pos in positions:
-            newDict[driver_intials[i]] = pos
-            i+=1
-        for label in newDict:
-            #print(driver_pars_dict['driver_pars'][label]['strategy_info'])
-            #print("\n")
-            pass
-        
-        #print(newDict)    
+        return next_compounds
+
 
 # ----------------------------------------------------------------------------------------------------------------------
 # TESTING --------------------------------------------------------------------------------------------------------------
@@ -431,3 +312,7 @@ class VSE_SUPERVISED(object):
 
 if __name__ == "__main__":
     pass
+
+
+
+

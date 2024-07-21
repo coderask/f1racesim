@@ -11,10 +11,8 @@ import pickle
 """
 author:
 Alexander Heilmeier
-
 date:
 12.07.2018
-
 .. description::
 This file includes the main function as well as required plot functions. The script part required to run
 the simulation is located at the bottom. Have a look there to insert the required user parameters.
@@ -143,9 +141,8 @@ def main(sim_opts: dict, race_pars_file: str, mcs_pars_file: str) -> list:
             while no_sim_runs_left > 0:
                 # reset job queue (list containing current simulation jobs)
                 job_queue = []
-
                 # submit simulations to the waiting queue of the executor instance as long as we have races left for
-                # simulation and the job queue is not full
+                # simulation and the job queue is not full.
                 while len(job_queue) <= max_no_concurrent_jobs and no_sim_runs_left > 0:
                     job_queue.append(executor.submit(race_handle,
                                                      pars_in,
@@ -260,7 +257,7 @@ if __name__ == '__main__':
     # set race parameter file names
     race_pars_file_ = 'pars_Catalunya_2019.ini'
     mcs_pars_file_ = 'pars_mcs.ini'
-
+    
     # set simulation options
     # use_prob_infl:        activates probabilistic influences within the race simulation -> lap times, pit stop
     #                       durations, race start performance
@@ -277,7 +274,7 @@ if __name__ == '__main__':
     # use_plot:             set if plotting should be used or not
     sim_opts_ = {"use_prob_infl": False,
                  "create_rand_events": False,
-                 "use_vse": False,
+                 "use_vse": True,
                  "no_sim_runs": 1,
                  "no_workers": 1,
                  "use_print": True,

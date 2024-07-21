@@ -890,6 +890,7 @@ class Race(MonteCarlo, RaceAnalysis):
 
                 overtake_allowed = \
                     self.overtake_allowed[self.cur_lap, pos_cur_b] and self.overtake_allowed[self.cur_lap, pos_back_b]
+                #print("is overtakeallowed: ", overtake_allowed)
 
                 # ------------------------------------------------------------------------------------------------------
                 # APPLY DUEL TIME LOSS ---------------------------------------------------------------------------------
@@ -974,6 +975,8 @@ class Race(MonteCarlo, RaceAnalysis):
         if self.vse is not None:
             # take tirechange decisions (are set None for retired drivers) (important: the decisions are taken based on
             # the data at the end of the previous lap (with some exceptions, e.g. FCY status))
+            #for driver in self.drivers_list:
+                #print(driver.initials)
             next_compound = self.vse.\
                 decide_pitstop(driver_initials=[driver.initials for driver in self.drivers_list],
                                cur_compounds=[driver.car.tireset.compound for driver in self.drivers_list],
