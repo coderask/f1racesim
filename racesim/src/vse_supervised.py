@@ -4,6 +4,7 @@ import tensorflow as tf
 import os
 import configparser
 import ast
+import pickle
 class VSE_SUPERVISED(object):
     
     """
@@ -46,7 +47,14 @@ class VSE_SUPERVISED(object):
         driver_pars_dict[key] = ast.literal_eval(driver_pars_section[key])
     print("driver_pars_dict:", driver_pars_dict['driver_pars']["HAM"])
     #intialzing and compiling model 
-    
+    global final_dataset
+    final_dataset = {}
+    global collected_data
+    collected_data = {}
+    global prev_collected_data 
+    prev_collected_data = {}
+    global driver_order 
+    driver_order = [None] * 20
     # ------------------------------------------------------------------------------------------------------------------
     # CONSTRUCTOR ------------------------------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------------------------------------------
@@ -82,7 +90,6 @@ class VSE_SUPERVISED(object):
 
         #aarnav added code
         #collect all IO from their regular use of tf-lite models
-        self.collected_data = {"inputs": [], "outputs": []}
         #set up the race file
 
 
@@ -227,7 +234,11 @@ class VSE_SUPERVISED(object):
                       raceprogress_prevlap: float,
                       position: list,
                       driver_intials: str) -> list:
-
+        lapno = 66*raceprogress_prevlap
+        print(lapno)
+        #print(position)
+        #rint(used_2compounds)
+        #print("driver_intials:", driver_intials)
         # get number of drivers and create output list
         no_drivers_tmp = self.X_conv_tc.shape[0]
         next_compounds = [None] * no_drivers_tmp
@@ -240,6 +251,8 @@ class VSE_SUPERVISED(object):
         pitstop_probs = np.zeros(no_drivers_tmp, dtype=np.float32)
 
         for idx_driver in range(no_drivers_tmp):
+            #print("cur driver index:", idx_driver)
+            #print(driver_intials)
             # continue if driver does not participate anymore
             if not bool_driving[idx_driver]:
                 continue
@@ -247,14 +260,12 @@ class VSE_SUPERVISED(object):
             # set NN input
             self.nnmodel_tc["interpreter"].set_tensor(self.nnmodel_tc["input_index"],
                                                       np.expand_dims(self.X_conv_tc[idx_driver], axis=0))
-            
+            #print(self.X_conv_tc[idx_driver])
             # invoke NN
             self.nnmodel_tc["interpreter"].invoke()
 
             # fetch NN output
-            pitstop_probs[idx_driver] = self.nnmodel_tc["interpreter"].get_tensor(self.nnmodel_tc["output_index"])
-
-            
+            pitstop_probs[idx_driver] = self.nnmodel_tc["interpreter"].get_tensor(self.nnmodel_tc["output_index"])            
         # get indices of the drivers that have a predicted pitstop probability above 50%
         idxs_driver_pitstop = list(np.flatnonzero(np.round(pitstop_probs)))
 
@@ -277,22 +288,37 @@ class VSE_SUPERVISED(object):
 
         # compound choice is only performed if any driver was chosen for a pit stop
         if idxs_driver_pitstop:
+            #print("driver intials list:", driver_intials)
             #print("list of drivers chosen for pitstop:", idxs_driver_pitstop)
+
             # create array for prediction probabilities (NN was trained with 3 different compounds to choose from)
             rel_compound_probs = np.zeros((len(idxs_driver_pitstop), 3), dtype=np.float32)
             '''print("model INput")
             print(self.X_conv_cc)'''
             #print("model Input shape")
             #print(self.X_conv_cc.shape)
+            i = 0
+            cur_dict = []
             for idx_rel, idx_abs in enumerate(idxs_driver_pitstop):
+                print("drivers selected:", idxs_driver_pitstop)
+                # print(i)
+                # i+=1
                 # set NN input
                 #print("SET NN INPUT")
                 self.nnmodel_cc["interpreter"].set_tensor(self.nnmodel_cc["input_index"],
                                                           np.expand_dims(self.X_conv_cc[idx_abs], axis=0))
+                #print("index:", idx_abs)
+                #print("input:", self.X_conv_cc[idx_abs])
+                #print("\n")
                 #print("expanded dims shape")
                 #print(np.expand_dims(self.X_conv_cc[idx_abs], axis = 0).shape)
                 #add input to the array
-                self.collected_data["inputs"].append(self.X_conv_cc[idx_driver])
+                #add normally if only one driver selected for pit
+                if len(idxs_driver_pitstop) == 1: 
+                    collected_data[lapno] = {idx_abs : self.X_conv_cc[idx_abs]}
+                else: 
+                    cur_dict.append({idx_abs : self.X_conv_cc[idx_abs]})
+                    collected_data[lapno] = cur_dict
                 #newModel
                 #print("")
                 #print("")
@@ -339,7 +365,6 @@ class VSE_SUPERVISED(object):
                 #print(self.nnmodel_cc["interpreter"].get_tensor(self.nnmodel_cc["output_index"]))
                 rel_compound_probs[idx_rel] = \
                     self.nnmodel_cc["interpreter"].get_tensor(self.nnmodel_cc["output_index"])
-                #self.collected_data["outputs"].append(rel_compound_probs[idx_rel])
                 #print("their prediction: ", rel_compound_probs[idx_rel])
             # get array with indices of relative compounds sorted by highest -> lowest probability
             idxs_rel_compound_sorted = list(np.argsort(-rel_compound_probs, axis=1))
@@ -384,10 +409,13 @@ class VSE_SUPERVISED(object):
                     break
         #AARNAV MODEL START 
         
-        #print("I to the model", self.collected_data["inputs"])
+        #print("I to the model", self.collected_data)
         #driverchoices = [["A4", "A3", "A4"], ]
-        #print("O of the model", self.collected_data["outputs"])
         return next_compounds
+    def expData(self, pits, collected_data):
+        with open('/Users/aarnavkoushik/Documents/GitHub/f1racesim/racesim/src/expData/expDataCat2019.pkl', 'wb') as file:
+            pickle.dump({'pits': pits, 'collected_data': collected_data}, file)
+    # print(f"Data")
     def trainTyreModel(self,
                       bool_driving: list or np.ndarray,
                       avail_dry_compounds: list,
@@ -398,32 +426,104 @@ class VSE_SUPERVISED(object):
                       raceprogress_prevlap: float,
                       driver_intials: str,
                       positions: list):
+        global prev_collected_data  
+        #contains all the collected inputs to the cc model in a dictionary s.t {lapnumber : {driverno: input}}} or {lapnumber: [{driverno1:input}, {driverno2: input}]}
+        global collected_data  
+        global final_dataset  
+        global driver_order
+        lapno = 66*raceprogress_prevlap
+        #print(len(collected_data))
+        #print(len(self.collected_data[1]))
         #print(i)
         #i+=1
         #define model
-        newModel = tf.keras.models.Sequential([
-                tf.keras.layers.Input(shape=(34,)),  # Input layer with the flattened shape
-                tf.keras.layers.Dense(32, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.001)),
-                tf.keras.layers.Dense(3, activation='softmax')
-                ]) 
-        #compile model
-        newModel.compile(optimizer=tf.keras.optimizers.Nadam(), loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])       
+        
+        # newModel = tf.keras.models.Sequential([
+        #         tf.keras.layers.Input(shape=(34,)),  # Input layer with the flattened shape
+        #         tf.keras.layers.Dense(32, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.001)),
+        #         tf.keras.layers.Dense(3, activation='softmax')
+        #         ]) 
+        # #compile model
+        # newModel.compile(optimizer=tf.keras.optimizers.Nadam(), loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])       
 
         #print("driver initals given to trainTyreMOdel:", driver_intials)
         #print("lastlap_positions:", positions)
         #train model 
         #convert position and name into a dicitonary 
         newDict = {}
+        driver_pit_lap_nos = {}
+        pit_lap_nos = []
         i=0
+        #print(lapno)
+        # print(len(self.collected_data))
+        
+        # print("\n")
         for pos in positions:
             newDict[driver_intials[i]] = pos
             i+=1
-        for label in newDict:
-            #print(driver_pars_dict['driver_pars'][label]['strategy_info'])
+        # for label in newDict:
+        #      print(label)
+        #      print(driver_pars_dict['driver_pars'][label]['strategy_info'])
+        #      print("\n")
+        #      pass
+
+        #creates a dictionary with pit_no:pitlap, pit_no_2:pitlap, pit_no_3:pitlap
+        for driver_idx,label in enumerate(newDict):
+            #print(label)
+            #print(driver_idx)
+            for lapindex in driver_pars_dict["driver_pars"][label]["strategy_info"]:
+                if driver_pit_lap_nos.get(label) is None:
+                    driver_pit_lap_nos[label] = lapindex[0]
+                    pit_lap_nos.append(lapindex[0])
+                elif driver_pit_lap_nos.get(label + "_2") is None: 
+                    tmp_label = label + "_2"
+                    driver_pit_lap_nos[tmp_label] = lapindex[0]
+                    pit_lap_nos.append(lapindex[0])
+                else: 
+                    driver_pit_lap_nos[label + "_3"] = lapindex[0]
+                    pit_lap_nos.append(lapindex[0])
+                #print(lapindex[0], ":", lapindex[1])
+                #print(lapindex[1])
+            #print(self.collected_data)
             #print("\n")
-            pass
+        #list of laps where a pitstop occured
+        pit_lap_nos = set(pit_lap_nos)
+        #print(pit_lap_nos)
+       #print(driver_pit_lap_nos)    
         
-        #print(newDict)    
+
+
+        #deciphering index of inputs
+        #uses only lap 0 because that matches grid positions 
+        if lapno == 0.0:
+            #consider each entry of positions(follows same indexing as self.X_conv_tc/cc)
+            for idx, pos in enumerate(positions):
+                for label in driver_pars_dict["driver_pars"]:
+                    #print("p_grid:", driver_pars_dict["driver_pars"][label]["p_grid"])
+                    if driver_pars_dict["driver_pars"][label]['p_grid'] == pos:
+                        driver_order[idx] = label
+        #print("Driver order:", driver_order)
+
+
+        '''create data'''
+        # if len(prev_collected_data) != collected_data:
+        #     for driver in driver_pit_lap_nos:
+        #         #print("Driver:", driver)
+        #         if lapno == driver_pit_lap_nos[driver]:
+        #             #print("pitlap for", driver)
+        #             pass
+        #     prev_collected_data = collected_data
+        #     final_dataset[lapno] = collected_data
+        # else:
+        #     final_dataset[lapno] = prev_collected_data
+        # print(newDict)
+        # print(lapno)
+        
+        if lapno == 65.0:
+            #print(final_dataset[65])
+            print(collected_data)
+            self.expData(driver_pit_lap_nos, collected_data)
+            
 
 # ----------------------------------------------------------------------------------------------------------------------
 # TESTING --------------------------------------------------------------------------------------------------------------

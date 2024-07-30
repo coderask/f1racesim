@@ -111,6 +111,7 @@ def main(sim_opts: dict, race_pars_file: str, mcs_pars_file: str) -> list:
 
             # CASE 2: result is invalid
             else:
+                print("result is invalid")
                 # increase no_sim_runs_left
                 ctr_invalid += 1
                 no_sim_runs_left += 1

@@ -648,16 +648,16 @@ class VSE(object):
                 raceprogress_prevlap=(cur_lap - 1) / tot_no_laps,
                 driver_intials= [driver_initials[idx] for idx in self.idxs_driver_supervised],
                 position= positions_prevlap)
-            #self.vse_supervised.trainTyreModel(
-                #bool_driving=bool_driving[self.idxs_driver_supervised],
-                #avail_dry_compounds=self.avail_dry_compounds,
-                #param_dry_compounds=self.param_dry_compounds,
-                #remainingtirechanges_curlap=[remainingtirechanges_curlap[idx] for idx in self.idxs_driver_supervised],
-                #used_2compounds=[used_2compounds[idx] for idx in self.idxs_driver_supervised],
-                #cur_compounds=[cur_compounds[idx] for idx in self.idxs_driver_supervised],
-                #raceprogress_prevlap=(cur_lap - 1) / tot_no_laps, 
-                #driver_intials= [driver_initials[idx] for idx in self.idxs_driver_supervised],
-               #positions= positions_prevlap)
+            self.vse_supervised.trainTyreModel(
+                bool_driving=bool_driving[self.idxs_driver_supervised],
+                avail_dry_compounds=self.avail_dry_compounds,
+                param_dry_compounds=self.param_dry_compounds,
+                remainingtirechanges_curlap=[remainingtirechanges_curlap[idx] for idx in self.idxs_driver_supervised],
+                used_2compounds=[used_2compounds[idx] for idx in self.idxs_driver_supervised],
+                cur_compounds=[cur_compounds[idx] for idx in self.idxs_driver_supervised],
+                raceprogress_prevlap=(cur_lap - 1) / tot_no_laps, 
+                driver_intials= [driver_initials[idx] for idx in self.idxs_driver_supervised],
+               positions= positions_prevlap)
             
             #print(self.vse_supervised.collected_data)
 
