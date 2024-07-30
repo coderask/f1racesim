@@ -55,6 +55,8 @@ class VSE_SUPERVISED(object):
     prev_collected_data = {}
     global driver_order 
     driver_order = [None] * 20
+    global driver_compound_choices
+    driver_compound_choices = {}
     # ------------------------------------------------------------------------------------------------------------------
     # CONSTRUCTOR ------------------------------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------------------------------------------
@@ -412,9 +414,9 @@ class VSE_SUPERVISED(object):
         #print("I to the model", self.collected_data)
         #driverchoices = [["A4", "A3", "A4"], ]
         return next_compounds
-    def expData(self, pits, collected_data):
+    def expData(self, pits, collected_data, dOrder):
         with open('/Users/aarnavkoushik/Documents/GitHub/f1racesim/racesim/src/expData/expDataCat2019.pkl', 'wb') as file:
-            pickle.dump({'pits': pits, 'collected_data': collected_data}, file)
+            pickle.dump({'pits': pits, 'collected_data': collected_data, "driver_order" : dOrder}, file)
     # print(f"Data")
     def trainTyreModel(self,
                       bool_driving: list or np.ndarray,
@@ -473,14 +475,15 @@ class VSE_SUPERVISED(object):
             #print(driver_idx)
             for lapindex in driver_pars_dict["driver_pars"][label]["strategy_info"]:
                 if driver_pit_lap_nos.get(label) is None:
-                    driver_pit_lap_nos[label] = lapindex[0]
+                    driver_pit_lap_nos[label] = (lapindex[0],lapindex[1])
+                    # driver_compound_choices[label] = lapindex[1]
                     pit_lap_nos.append(lapindex[0])
                 elif driver_pit_lap_nos.get(label + "_2") is None: 
                     tmp_label = label + "_2"
-                    driver_pit_lap_nos[tmp_label] = lapindex[0]
+                    driver_pit_lap_nos[tmp_label] = (lapindex[0], lapindex[1])
                     pit_lap_nos.append(lapindex[0])
                 else: 
-                    driver_pit_lap_nos[label + "_3"] = lapindex[0]
+                    driver_pit_lap_nos[label + "_3"] = (lapindex[0], lapindex[1])
                     pit_lap_nos.append(lapindex[0])
                 #print(lapindex[0], ":", lapindex[1])
                 #print(lapindex[1])
@@ -521,8 +524,9 @@ class VSE_SUPERVISED(object):
         
         if lapno == 65.0:
             #print(final_dataset[65])
-            print(collected_data)
-            self.expData(driver_pit_lap_nos, collected_data)
+            # print(collected_data)
+            print(driver_pit_lap_nos)
+            self.expData(driver_pit_lap_nos, collected_data, driver_order)
             
 
 # ----------------------------------------------------------------------------------------------------------------------
