@@ -37,7 +37,12 @@ class VSE_SUPERVISED(object):
 
 
     #extracting required race file
-    path = "/Users/aarnavkoushik/Documents/GitHub/f1racesim/racesim/input/parameters/pars_Catalunya_2019.ini"
+     # laps = config['RACE_PARS']
+    # for key in laps:
+    #     for key1 in laps[key]:
+    #       print(ast.literal_eval(key1))
+    #print(laps)
+    path = "/Users/aarnavkoushik/Documents/GitHub/f1racesim/racesim/input/parameters/pars_Shanghai_2019.ini"
     config = configparser.ConfigParser()
     config.read(path)
     driver_pars_section = config['DRIVER_PARS']
@@ -45,7 +50,14 @@ class VSE_SUPERVISED(object):
     driver_pars_dict= {}
     for key in driver_pars_section:
         driver_pars_dict[key] = ast.literal_eval(driver_pars_section[key])
-    print("driver_pars_dict:", driver_pars_dict['driver_pars']["HAM"])
+    #print("driver_pars_dict:", driver_pars_dict['driver_pars']["HAM"])
+    race_pars_section = config['RACE_PARS']
+    race_pars_str = race_pars_section['race_pars']
+    race_pars_str = race_pars_str.replace('true', 'True').replace('false', 'False').replace('null', 'None')
+    race_pars_dict = ast.literal_eval(race_pars_str)
+    global tot_no_laps
+    tot_no_laps = race_pars_dict['tot_no_laps']
+    print(tot_no_laps)
     #intialzing and compiling model 
     global final_dataset
     final_dataset = {}
@@ -236,8 +248,9 @@ class VSE_SUPERVISED(object):
                       raceprogress_prevlap: float,
                       position: list,
                       driver_intials: str) -> list:
-        lapno = 66*raceprogress_prevlap
-        print(lapno)
+        lapno = tot_no_laps * raceprogress_prevlap
+        lapno = round(lapno, 4)
+        #(lapno)
         #print(position)
         #rint(used_2compounds)
         #print("driver_intials:", driver_intials)
@@ -251,14 +264,15 @@ class VSE_SUPERVISED(object):
 
         # create array for prediction probabilities
         pitstop_probs = np.zeros(no_drivers_tmp, dtype=np.float32)
-
+        cur_dict=[]
         for idx_driver in range(no_drivers_tmp):
             #print("cur driver index:", idx_driver)
             #print(driver_intials)
             # continue if driver does not participate anymore
             if not bool_driving[idx_driver]:
                 continue
-
+            cur_dict.append({idx_driver : self.X_conv_cc[idx_driver]})
+            collected_data[lapno] = cur_dict    
             # set NN input
             self.nnmodel_tc["interpreter"].set_tensor(self.nnmodel_tc["input_index"],
                                                       np.expand_dims(self.X_conv_tc[idx_driver], axis=0))
@@ -300,9 +314,9 @@ class VSE_SUPERVISED(object):
             #print("model Input shape")
             #print(self.X_conv_cc.shape)
             i = 0
-            cur_dict = []
+            #cur_dict = []
             for idx_rel, idx_abs in enumerate(idxs_driver_pitstop):
-                print("drivers selected:", idxs_driver_pitstop)
+                # print("drivers selected:", idxs_driver_pitstop)
                 # print(i)
                 # i+=1
                 # set NN input
@@ -316,11 +330,11 @@ class VSE_SUPERVISED(object):
                 #print(np.expand_dims(self.X_conv_cc[idx_abs], axis = 0).shape)
                 #add input to the array
                 #add normally if only one driver selected for pit
-                if len(idxs_driver_pitstop) == 1: 
-                    collected_data[lapno] = {idx_abs : self.X_conv_cc[idx_abs]}
-                else: 
-                    cur_dict.append({idx_abs : self.X_conv_cc[idx_abs]})
-                    collected_data[lapno] = cur_dict
+                # if len(idxs_driver_pitstop) == 1: 
+                #     collected_data[lapno] = {idx_abs : self.X_conv_cc[idx_abs]}
+                # else: 
+                #     cur_dict.append({idx_abs : self.X_conv_cc[idx_abs]})
+                #     collected_data[lapno] = cur_dict
                 #newModel
                 #print("")
                 #print("")
@@ -367,6 +381,8 @@ class VSE_SUPERVISED(object):
                 #print(self.nnmodel_cc["interpreter"].get_tensor(self.nnmodel_cc["output_index"]))
                 rel_compound_probs[idx_rel] = \
                     self.nnmodel_cc["interpreter"].get_tensor(self.nnmodel_cc["output_index"])
+                
+                #print(rel_compound_probs[idx_rel])
                 #print("their prediction: ", rel_compound_probs[idx_rel])
             # get array with indices of relative compounds sorted by highest -> lowest probability
             idxs_rel_compound_sorted = list(np.argsort(-rel_compound_probs, axis=1))
@@ -414,9 +430,9 @@ class VSE_SUPERVISED(object):
         #print("I to the model", self.collected_data)
         #driverchoices = [["A4", "A3", "A4"], ]
         return next_compounds
-    def expData(self, pits, collected_data, dOrder):
+    def expData(self, pits, collected_data, dOrder, ac, tl):
         with open('/Users/aarnavkoushik/Documents/GitHub/f1racesim/racesim/src/expData/expDataCat2019.pkl', 'wb') as file:
-            pickle.dump({'pits': pits, 'collected_data': collected_data, "driver_order" : dOrder}, file)
+            pickle.dump({'pits': pits, 'collected_data': collected_data, "driver_order" : dOrder, "avail" : ac, "totLaps" : tl}, file)
     # print(f"Data")
     def trainTyreModel(self,
                       bool_driving: list or np.ndarray,
@@ -433,7 +449,10 @@ class VSE_SUPERVISED(object):
         global collected_data  
         global final_dataset  
         global driver_order
-        lapno = 66*raceprogress_prevlap
+        lapno = tot_no_laps * raceprogress_prevlap
+        #print("first", lapno)
+        lapno = round(lapno, 4)
+        print("second", lapno)
         #print(len(collected_data))
         #print(len(self.collected_data[1]))
         #print(i)
@@ -521,12 +540,14 @@ class VSE_SUPERVISED(object):
         #     final_dataset[lapno] = prev_collected_data
         # print(newDict)
         # print(lapno)
-        
-        if lapno == 65.0:
+        # print(driver_pit_lap_nos)
+        # print(driver_order)
+        if lapno == (tot_no_laps-1):
             #print(final_dataset[65])
-            # print(collected_data)
-            print(driver_pit_lap_nos)
-            self.expData(driver_pit_lap_nos, collected_data, driver_order)
+            #print(collected_data)
+            #print(driver_pit_lap_nos)
+            print("test")
+            self.expData(driver_pit_lap_nos, collected_data, driver_order, avail_dry_compounds, round(tot_no_laps,4))
             
 
 # ----------------------------------------------------------------------------------------------------------------------
