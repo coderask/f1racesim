@@ -1,10 +1,11 @@
 import pickle 
 import tensorflow as tf 
 import numpy as np
+import os
 
 '''DATA INTIALIZATION'''
 #load data in 
-with open('/Users/aarnavkoushik/Documents/GitHub/f1racesim/racesim/src/expData/expDataCat2019.pkl', 'rb') as file:
+with open("racesim\src\expData\expDataCat2019.pkl", 'rb') as file:
     data = pickle.load(file)
 #dictionary with {driver intials: (lapnumber, compound)}
 pits = data['pits']
@@ -22,9 +23,24 @@ tLaps = data["totLaps"]
 # print(inp)
 # print("\n")
 # print(order)
-print(avail)
-trunc_inp = []
-label = []
+#check if inputs already exist, if not make blank ones
+if os.path.exists('racesim/src/ccModelRecreation/inputs.pkl'):
+    with open('racesim/src/ccModelRecreation/inputs.pkl', 'rb') as file:
+        trunc_inp = pickle.load(file)
+        #print("inputed input")
+else:
+    trunc_inp = []
+
+if os.path.exists('racesim/src/ccModelRecreation/labels.pkl'):
+    with open('racesim/src/ccModelRecreation/labels.pkl', 'rb') as file:
+        label = pickle.load(file)
+        print(f"inputed label = {label}")
+else:
+    label = []
+
+# print(avail)
+# trunc_inp = []
+# label = []
 
 '''ENCODE TIRE COMPOUND'''
 def encode_compounds(compound):
@@ -66,7 +82,7 @@ def encode_compounds(compound):
 #                 ]) 
 # #compile model
 # newModel.compile(optimizer=tf.keras.optimizers.Nadam(), loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])       
-'''chat gpt suggested fix(I dont understand why)'''
+
 newModel = tf.keras.models.Sequential([
                 tf.keras.layers.Input(shape=(34,)),  # Input layer with the flattened shape
                 tf.keras.layers.Dense(32, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.001)),
@@ -125,6 +141,12 @@ for lap in inp:
                #      if lap == pits[driverInitPit][0]:
                #            pass
                #            # print (f"{order[driverIdx]} start on lap {pits[driverInitPit][0]} with {pits[driverInitPit][1]}")
+
+#save inputs for this race instance 
+with open('racesim/src/ccModelRecreation/inputs.pkl', 'wb') as file:
+    pickle.dump(trunc_inp, file)
+with open('racesim/src/ccModelRecreation/labels.pkl', 'wb') as file:
+    pickle.dump(label, file)
 # print(label)
 # print(len(trunc_inp))       
 # print(len(label))
@@ -133,7 +155,7 @@ input = np.array(trunc_inp)
 labels = np.array(label)
 # print(labels)
 input = input.reshape(input.shape[0], -1)
-#newModel.load_weights("racesim/src/ccModelRecreation/ccShanghai2019.weights.h5")
+newModel.load_weights("racesim/src/ccModelRecreation/ccShanghai2019.weights.h5")
 '''running 48 epochs on catulyna stablizes at 65% ish, more epochs doesnt seem to help'''
-newModel.fit(input, labels, epochs=96, validation_data=(input, labels))
+newModel.fit(input, labels, epochs=6, validation_data=(input, labels))
 newModel.save_weights("racesim/src/ccModelRecreation/ccShanghai2019.weights.h5")

@@ -42,7 +42,7 @@ class VSE_SUPERVISED(object):
     #     for key1 in laps[key]:
     #       print(ast.literal_eval(key1))
     #print(laps)
-    path = "/Users/aarnavkoushik/Documents/GitHub/f1racesim/racesim/input/parameters/pars_Shanghai_2019.ini"
+    path = "racesim/input/parameters/pars_Shanghai_2019.ini"
     config = configparser.ConfigParser()
     config.read(path)
     driver_pars_section = config['DRIVER_PARS']
@@ -431,7 +431,7 @@ class VSE_SUPERVISED(object):
         #driverchoices = [["A4", "A3", "A4"], ]
         return next_compounds
     def expData(self, pits, collected_data, dOrder, ac, tl):
-        with open('/Users/aarnavkoushik/Documents/GitHub/f1racesim/racesim/src/expData/expDataCat2019.pkl', 'wb') as file:
+        with open('racesim/src/expData/expDataCat2019.pkl', 'wb') as file:
             pickle.dump({'pits': pits, 'collected_data': collected_data, "driver_order" : dOrder, "avail" : ac, "totLaps" : tl}, file)
     # print(f"Data")
     def trainTyreModel(self,
