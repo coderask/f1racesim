@@ -5,7 +5,7 @@ import os
 
 '''DATA INTIALIZATION'''
 #load data in 
-with open("racesim\src\expData\expDataCat2019.pkl", 'rb') as file:
+with open("racesim/src/expData/expDataCat2019.pkl", 'rb') as file:
     data = pickle.load(file)
 #dictionary with {driver intials: (lapnumber, compound)}
 pits = data['pits']
