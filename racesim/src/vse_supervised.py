@@ -42,7 +42,7 @@ class VSE_SUPERVISED(object):
     #     for key1 in laps[key]:
     #       print(ast.literal_eval(key1))
     #print(laps)
-    path = "racesim/input/parameters/pars_Shanghai_2019.ini"
+    path = "racesim/input/parameters/pars_Catalunya_2019.ini"
     config = configparser.ConfigParser()
     config.read(path)
     driver_pars_section = config['DRIVER_PARS']
@@ -249,7 +249,7 @@ class VSE_SUPERVISED(object):
                       position: list,
                       driver_intials: str) -> list:
         lapno = tot_no_laps * raceprogress_prevlap
-        lapno = round(lapno, 4)
+        lapno = round(lapno, 0)
         #(lapno)
         #print(position)
         #rint(used_2compounds)
@@ -451,7 +451,7 @@ class VSE_SUPERVISED(object):
         global driver_order
         lapno = tot_no_laps * raceprogress_prevlap
         #print("first", lapno)
-        lapno = round(lapno, 4)
+        lapno = round(lapno, 0)
         print("second", lapno)
         #print(len(collected_data))
         #print(len(self.collected_data[1]))
@@ -547,7 +547,7 @@ class VSE_SUPERVISED(object):
             #print(collected_data)
             #print(driver_pit_lap_nos)
             print("test")
-            self.expData(driver_pit_lap_nos, collected_data, driver_order, avail_dry_compounds, round(tot_no_laps,4))
+            self.expData(driver_pit_lap_nos, collected_data, driver_order, avail_dry_compounds, tot_no_laps)
             
 
 # ----------------------------------------------------------------------------------------------------------------------

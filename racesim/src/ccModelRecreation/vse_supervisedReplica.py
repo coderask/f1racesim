@@ -18,7 +18,7 @@ avail = data["avail"]
 #total laps 
 tLaps = data["totLaps"]
 # print(tLaps)
-# print(pits)
+print(pits)
 # print("\n")
 # print(inp)
 # print("\n")
@@ -27,17 +27,18 @@ tLaps = data["totLaps"]
 if os.path.exists('racesim/src/ccModelRecreation/inputs.pkl'):
     with open('racesim/src/ccModelRecreation/inputs.pkl', 'rb') as file:
         trunc_inp = pickle.load(file)
-        #print("inputed input")
+        #print("inputed input", trunc_inp)
 else:
     trunc_inp = []
 
 if os.path.exists('racesim/src/ccModelRecreation/labels.pkl'):
     with open('racesim/src/ccModelRecreation/labels.pkl', 'rb') as file:
         label = pickle.load(file)
-        print(f"inputed label = {label}")
+        #print(f"inputed label = {label}")
 else:
     label = []
-
+# trunc_inp = []
+# label = []
 # print(avail)
 # trunc_inp = []
 # label = []
@@ -47,6 +48,10 @@ def encode_compounds(compound):
     max = avail[2][1]
     mid = avail[1][1]
     low = avail[0][1]
+    print("avail", avail)
+    print("max", max)
+    print("mid", mid)
+    print("low", low)
     if compound[1] == max:
         return [0, 0, 1]
     elif compound[1] == mid:
@@ -95,7 +100,7 @@ newModel.compile(optimizer=tf.keras.optimizers.Nadam(),
 '''MODEL TRAINING'''
 #loop through every lap
 for lap in inp:
-    print(lap)
+    lap = round(lap, 0)
     #loop through every driver for each lap 
     for driver in inp[lap]:
       #print(driver)
@@ -111,10 +116,16 @@ for lap in inp:
                # print("driverInitPit:", driverInitPit)
                #is cur_lap same as pit and not start of race 
                if lap == pits[driverInitPit][0] and lap != 0:
-                   trunc_inp.append(driver[driverIdx])
+                   print(encode_compounds(pits[driverInitPit][1]))
+                   #is the driver still driving
+                #    if encode_compounds(pits([driverInitPit][1])) is not None:
+                #        trunc_inp.append(driver[driverIdx])
+                #        label.append(encode_compounds(pits[driverInitPit][1]))
                #     print(pits[driverInitPit][1])
                #     print(encode_compounds(pits[driverInitPit][1]))
-                   label.append(encode_compounds(pits[driverInitPit][1]))
+
+                   
+
                    #print(f"{driver[driverIdx]} is the input on {lap} for {order[driverIdx]} pitstop and {encode_compounds(pits[driverInitPit][1])} is the label")
                #     print(inp[lap][driver][])
                     #trunc_inp.append(inp[lap][driverIdx])
@@ -141,21 +152,33 @@ for lap in inp:
                #      if lap == pits[driverInitPit][0]:
                #            pass
                #            # print (f"{order[driverIdx]} start on lap {pits[driverInitPit][0]} with {pits[driverInitPit][1]}")
+# #remove drivers who arent participating anymore 
+# for inputInd, labelInd in enumerate(trunc_inp):
+#     print(inputInd)
+#     print(labelInd)
+
 
 #save inputs for this race instance 
-with open('racesim/src/ccModelRecreation/inputs.pkl', 'wb') as file:
-    pickle.dump(trunc_inp, file)
-with open('racesim/src/ccModelRecreation/labels.pkl', 'wb') as file:
-    pickle.dump(label, file)
+# with open('racesim/src/ccModelRecreation/inputs.pkl', 'wb') as file:
+#     pickle.dump(trunc_inp, file)
+# with open('racesim/src/ccModelRecreation/labels.pkl', 'wb') as file:
+#     pickle.dump(label, file)
+
+# print(trunc_inp)
+# print(label)
 # print(label)
 # print(len(trunc_inp))       
 # print(len(label))
-input = np.array(trunc_inp)
-# print(input)
-labels = np.array(label)
-# print(labels)
-input = input.reshape(input.shape[0], -1)
-newModel.load_weights("racesim/src/ccModelRecreation/ccShanghai2019.weights.h5")
-'''running 48 epochs on catulyna stablizes at 65% ish, more epochs doesnt seem to help'''
-newModel.fit(input, labels, epochs=6, validation_data=(input, labels))
-newModel.save_weights("racesim/src/ccModelRecreation/ccShanghai2019.weights.h5")
+
+
+# input = np.array(trunc_inp)
+# # print(input)
+# labels = np.array(label)
+# # print(labels)
+# input = input.reshape(input.shape[0], -1)
+
+
+# newModel.load_weights("racesim/src/ccModelRecreation/ccShanghai2019.weights.h5")
+# '''running 48 epochs on catulyna stablizes at 65% ish, more epochs doesnt seem to help'''
+# newModel.fit(input, labels, epochs=6, validation_data=(input, labels))
+# newModel.save_weights("racesim/src/ccModelRecreation/ccShanghai2019.weights.h5")

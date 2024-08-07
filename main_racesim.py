@@ -256,7 +256,7 @@ if __name__ == '__main__':
     # ------------------------------------------------------------------------------------------------------------------
 
     # set race parameter file names
-    race_pars_file_ = 'pars_Shanghai_2019.ini'
+    race_pars_file_ = 'pars_Catalunya_2019.ini'
     mcs_pars_file_ = 'pars_mcs.ini'
     
     # set simulation options
