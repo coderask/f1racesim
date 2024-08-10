@@ -18,23 +18,25 @@ avail = data["avail"]
 #total laps 
 tLaps = data["totLaps"]
 # print(tLaps)
-print(pits)
-# print("\n")
-# print(inp)
+# print(pits)
+# # print("\n")
+# # print(inp)
 # print("\n")
 # print(order)
-#check if inputs already exist, if not make blank ones
+# check if inputs already exist, if not make blank ones
 if os.path.exists('racesim/src/ccModelRecreation/inputs.pkl'):
     with open('racesim/src/ccModelRecreation/inputs.pkl', 'rb') as file:
         trunc_inp = pickle.load(file)
-        #print("inputed input", trunc_inp)
+        # trunc_inp = []
+        print("inputed input", trunc_inp)
 else:
     trunc_inp = []
 
 if os.path.exists('racesim/src/ccModelRecreation/labels.pkl'):
     with open('racesim/src/ccModelRecreation/labels.pkl', 'rb') as file:
         label = pickle.load(file)
-        #print(f"inputed label = {label}")
+        # label = []
+        print(f"inputed label = {label}")
 else:
     label = []
 # trunc_inp = []
@@ -48,10 +50,10 @@ def encode_compounds(compound):
     max = avail[2][1]
     mid = avail[1][1]
     low = avail[0][1]
-    print("avail", avail)
-    print("max", max)
-    print("mid", mid)
-    print("low", low)
+    # print("avail", avail)
+    # print("max", max)
+    # print("mid", mid)
+    # print("low", low)
     if compound[1] == max:
         return [0, 0, 1]
     elif compound[1] == mid:
@@ -116,16 +118,11 @@ for lap in inp:
                # print("driverInitPit:", driverInitPit)
                #is cur_lap same as pit and not start of race 
                if lap == pits[driverInitPit][0] and lap != 0:
-                   print(encode_compounds(pits[driverInitPit][1]))
-                   #is the driver still driving
-                #    if encode_compounds(pits([driverInitPit][1])) is not None:
-                #        trunc_inp.append(driver[driverIdx])
-                #        label.append(encode_compounds(pits[driverInitPit][1]))
+                #    pass
+                   trunc_inp.append(driver[driverIdx])
+                   label.append(encode_compounds(pits[driverInitPit][1]))
                #     print(pits[driverInitPit][1])
-               #     print(encode_compounds(pits[driverInitPit][1]))
-
-                   
-
+               #     print(encode_compounds(pits[driverInitPit][1])
                    #print(f"{driver[driverIdx]} is the input on {lap} for {order[driverIdx]} pitstop and {encode_compounds(pits[driverInitPit][1])} is the label")
                #     print(inp[lap][driver][])
                     #trunc_inp.append(inp[lap][driverIdx])
@@ -158,11 +155,12 @@ for lap in inp:
 #     print(labelInd)
 
 
-#save inputs for this race instance 
-# with open('racesim/src/ccModelRecreation/inputs.pkl', 'wb') as file:
-#     pickle.dump(trunc_inp, file)
-# with open('racesim/src/ccModelRecreation/labels.pkl', 'wb') as file:
-#     pickle.dump(label, file)
+# save inputs for this race instance 
+with open('racesim/src/ccModelRecreation/inputs.pkl', 'wb') as file:
+    pickle.dump(trunc_inp, file)
+with open('racesim/src/ccModelRecreation/labels.pkl', 'wb') as file:
+    print("saved label", label)
+    pickle.dump(label, file)
 
 # print(trunc_inp)
 # print(label)

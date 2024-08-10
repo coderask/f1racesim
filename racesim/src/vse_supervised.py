@@ -311,7 +311,7 @@ class VSE_SUPERVISED(object):
             rel_compound_probs = np.zeros((len(idxs_driver_pitstop), 3), dtype=np.float32)
             '''print("model INput")
             print(self.X_conv_cc)'''
-            #print("model Input shape")
+            #print("model Input shape")z
             #print(self.X_conv_cc.shape)
             i = 0
             #cur_dict = []

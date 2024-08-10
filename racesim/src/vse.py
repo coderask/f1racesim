@@ -420,6 +420,7 @@ class VSE(object):
             rel_compound_num_curlap = [self.avail_dry_compounds.index(compound) + 1 for compound in cur_compounds]
 
         else:
+            print(cur_compounds)
             rel_compound_num_curlap = [self.avail_dry_compounds.index(compound) for compound in cur_compounds]
 
         # fcy_stat_curlap ----------------------------------------------------------------------------------------------
