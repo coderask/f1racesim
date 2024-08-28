@@ -42,7 +42,7 @@ class VSE_SUPERVISED(object):
     #     for key1 in laps[key]:
     #       print(ast.literal_eval(key1))
     #print(laps)
-    path = "racesim/input/parameters/pars_Catalunya_2019.ini"
+    path = "racesim/input/parameters/pars_Melbourne_2019.ini"
     config = configparser.ConfigParser()
     config.read(path)
     driver_pars_section = config['DRIVER_PARS']
@@ -69,6 +69,7 @@ class VSE_SUPERVISED(object):
     driver_order = [None] * 20
     global driver_compound_choices
     driver_compound_choices = {}
+
     # ------------------------------------------------------------------------------------------------------------------
     # CONSTRUCTOR ------------------------------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------------------------------------------
@@ -271,8 +272,10 @@ class VSE_SUPERVISED(object):
             # continue if driver does not participate anymore
             if not bool_driving[idx_driver]:
                 continue
-            cur_dict.append({idx_driver : self.X_conv_cc[idx_driver]})
-            collected_data[lapno] = cur_dict    
+            #following their preprocessing reqs
+            if(position[idx_driver] <= 10):
+                cur_dict.append({idx_driver : self.X_conv_cc[idx_driver]})
+                collected_data[lapno] = cur_dict    
             # set NN input
             self.nnmodel_tc["interpreter"].set_tensor(self.nnmodel_tc["input_index"],
                                                       np.expand_dims(self.X_conv_tc[idx_driver], axis=0))
@@ -501,9 +504,11 @@ class VSE_SUPERVISED(object):
                     tmp_label = label + "_2"
                     driver_pit_lap_nos[tmp_label] = (lapindex[0], lapindex[1])
                     pit_lap_nos.append(lapindex[0])
-                else: 
+                elif driver_pit_lap_nos.get(label+ "_3") is None: 
                     driver_pit_lap_nos[label + "_3"] = (lapindex[0], lapindex[1])
                     pit_lap_nos.append(lapindex[0])
+                else: 
+                    print('DRIVER OVER 3 PITSTOPS REFER BACK TO 511 VSE SUPERVISED')
                 #print(lapindex[0], ":", lapindex[1])
                 #print(lapindex[1])
             #print(self.collected_data)

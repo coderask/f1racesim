@@ -11,40 +11,42 @@ with open("racesim/src/expData/expDataCat2019.pkl", 'rb') as file:
 pits = data['pits']
 #collected X_conv_cc stored as {lapnumber : {driver : input}} or for multiple drivers {lapnumber : [{driver1, input1}, {driver2, input2}]}
 inp = data['collected_data']
+print(len(inp))
 #order of drivers as list of intials 
 order = data['driver_order']
+# print(order)
 #available compounds 
 avail = data["avail"]
 #total laps 
 tLaps = data["totLaps"]
 # print(tLaps)
-# print(pits)
+print(pits)
 # # print("\n")
 # # print(inp)
 # print("\n")
 # print(order)
 # check if inputs already exist, if not make blank ones
-if os.path.exists('racesim/src/ccModelRecreation/inputs.pkl'):
+if os.path.exists('a racesim/src/ccModelRecreation/inputs.pkl'):
     with open('racesim/src/ccModelRecreation/inputs.pkl', 'rb') as file:
         trunc_inp = pickle.load(file)
         # trunc_inp = []
-        print("inputed input", trunc_inp)
+        #print("inputed input", trunc_inp)
 else:
     trunc_inp = []
 
-if os.path.exists('racesim/src/ccModelRecreation/labels.pkl'):
+if os.path.exists('a racesim/src/ccModelRecreation/labels.pkl'):
     with open('racesim/src/ccModelRecreation/labels.pkl', 'rb') as file:
         label = pickle.load(file)
         # label = []
-        print(f"inputed label = {label}")
+        #(f"inputed label = {label}")
 else:
     label = []
 # trunc_inp = []
 # label = []
 # print(avail)
 # trunc_inp = []
-# label = []
-
+tc_label = []
+tc_input = []
 '''ENCODE TIRE COMPOUND'''
 def encode_compounds(compound):
     max = avail[2][1]
@@ -80,22 +82,32 @@ def encode_compounds(compound):
 
 
 '''MODEL CREATION '''
-''' this raised an error regarding using Sparse Categorical Cross Entropy instead of Categorial Cross Entropy'''
-# #intialize the model
-# newModel = tf.keras.models.Sequential([
-#                 tf.keras.layers.Input(shape=(34,)),  # Input layer with the flattened shape
-#                 tf.keras.layers.Dense(32, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.001)),
-#                 tf.keras.layers.Dense(3, activation='softmax')
-#                 ]) 
-# #compile model
-# newModel.compile(optimizer=tf.keras.optimizers.Nadam(), loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True), metrics=[tf.keras.metrics.SparseCategoricalAccuracy()])       
 
-newModel = tf.keras.models.Sequential([
+
+#pitstop choice model #no LSTM layer currently
+
+
+# pitModel = tf.keras.models.Sequential([
+#     tf.keras.layers.Input(shape=(34,)),  # Input layer with the flattened shape
+#     tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.0005)),
+#     tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.0005)),
+#     tf.keras.layers.Dense(64, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.0005)),
+#     tf.keras.layers.Dense(1, activation='sigmoid')
+# ])
+
+# pitModel.compile(optimizer=tf.keras.optimizers.Nadam(),
+#                  loss=tf.keras.losses.BinaryCrossentropy(),
+#                  metrics=[tf.keras.metrics.BinaryAccuracy()])
+
+
+
+#compound choice model 
+ccModel = tf.keras.models.Sequential([
                 tf.keras.layers.Input(shape=(34,)),  # Input layer with the flattened shape
                 tf.keras.layers.Dense(32, activation='relu', kernel_regularizer=tf.keras.regularizers.l2(0.001)),
                 tf.keras.layers.Dense(3, activation='softmax')
                 ]) 
-newModel.compile(optimizer=tf.keras.optimizers.Nadam(), 
+ccModel.compile(optimizer=tf.keras.optimizers.Nadam(), 
                  loss=tf.keras.losses.CategoricalCrossentropy(from_logits=False), #changed from logits and Spare entropy
                  metrics=[tf.keras.metrics.CategoricalAccuracy()])
 
@@ -103,6 +115,7 @@ newModel.compile(optimizer=tf.keras.optimizers.Nadam(),
 #loop through every lap
 for lap in inp:
     lap = round(lap, 0)
+    print(lap)
     #loop through every driver for each lap 
     for driver in inp[lap]:
       #print(driver)
@@ -118,9 +131,11 @@ for lap in inp:
                # print("driverInitPit:", driverInitPit)
                #is cur_lap same as pit and not start of race 
                if lap == pits[driverInitPit][0] and lap != 0:
-                #    pass
-                   trunc_inp.append(driver[driverIdx])
-                   label.append(encode_compounds(pits[driverInitPit][1]))
+                   
+                   tc_input.append(driver[driverIdx])
+                   tc_label.append(1)
+                #    trunc_inp.append(driver[driverIdx])
+                #    label.append(encode_compounds(pits[driverInitPit][1]))
                #     print(pits[driverInitPit][1])
                #     print(encode_compounds(pits[driverInitPit][1])
                    #print(f"{driver[driverIdx]} is the input on {lap} for {order[driverIdx]} pitstop and {encode_compounds(pits[driverInitPit][1])} is the label")
@@ -132,6 +147,10 @@ for lap in inp:
                     #label.append(encode_compounds(pits[driverInitPit][1]))
                 #check which pitstop this is
                 # print("1")
+                #if the cur_lap is not a predicted pit lap 
+            #    else:
+            #        tc_input.append(driver[driverIdx])
+            #        tc_label.append(0)
                #  if "_3" in driverInitPit:
                #      pass
                #      # print("1")
@@ -159,15 +178,16 @@ for lap in inp:
 with open('racesim/src/ccModelRecreation/inputs.pkl', 'wb') as file:
     pickle.dump(trunc_inp, file)
 with open('racesim/src/ccModelRecreation/labels.pkl', 'wb') as file:
-    print("saved label", label)
+    #print("saved label", label)
     pickle.dump(label, file)
 
 # print(trunc_inp)
 # print(label)
 # print(label)
-# print(len(trunc_inp))       
-# print(len(label))
-
+print(len(trunc_inp))       
+print(len(label))
+print(len(tc_label))
+print(len(tc_input))
 
 # input = np.array(trunc_inp)
 # # print(input)
@@ -176,7 +196,7 @@ with open('racesim/src/ccModelRecreation/labels.pkl', 'wb') as file:
 # input = input.reshape(input.shape[0], -1)
 
 
-# newModel.load_weights("racesim/src/ccModelRecreation/ccShanghai2019.weights.h5")
+# ccModel.load_weights("racesim/src/ccModelRecreation/ccShanghai2019.weights.h5")
 # '''running 48 epochs on catulyna stablizes at 65% ish, more epochs doesnt seem to help'''
-# newModel.fit(input, labels, epochs=6, validation_data=(input, labels))
-# newModel.save_weights("racesim/src/ccModelRecreation/ccShanghai2019.weights.h5")
+# ccModel.fit(input, labels, epochs=6, validation_data=(input, labels))
+# ccModel.save_weights("racesim/src/ccModelRecreation/ccShanghai2019.weights.h5")
