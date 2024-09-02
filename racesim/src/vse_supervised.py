@@ -5,6 +5,8 @@ import os
 import configparser
 import ast
 import pickle
+
+
 class VSE_SUPERVISED(object):
     
     """
@@ -42,7 +44,7 @@ class VSE_SUPERVISED(object):
     #     for key1 in laps[key]:
     #       print(ast.literal_eval(key1))
     #print(laps)
-    path = "racesim/input/parameters/pars_Melbourne_2019.ini"
+    path = "racesim/input/parameters/pars_Catalunya_2019.ini"
     config = configparser.ConfigParser()
     config.read(path)
     driver_pars_section = config['DRIVER_PARS']
@@ -69,6 +71,10 @@ class VSE_SUPERVISED(object):
     driver_order = [None] * 20
     global driver_compound_choices
     driver_compound_choices = {}
+
+    with open('racesim/src/ccModelRecreation/lapdict.pkl', 'rb') as pikle:
+        lapdict = pickle.load(pikle)
+    print(lapdict)
 
     # ------------------------------------------------------------------------------------------------------------------
     # CONSTRUCTOR ------------------------------------------------------------------------------------------------------
@@ -433,9 +439,9 @@ class VSE_SUPERVISED(object):
         #print("I to the model", self.collected_data)
         #driverchoices = [["A4", "A3", "A4"], ]
         return next_compounds
-    def expData(self, pits, collected_data, dOrder, ac, tl):
+    def expData(self, pits, collected_data, dOrder, ac, tl, threePitIgnore):
         with open('racesim/src/expData/expDataCat2019.pkl', 'wb') as file:
-            pickle.dump({'pits': pits, 'collected_data': collected_data, "driver_order" : dOrder, "avail" : ac, "totLaps" : tl}, file)
+            pickle.dump({'pits': pits, 'collected_data': collected_data, "driver_order" : dOrder, "avail" : ac, "totLaps" : tl, "threePitIgnore" : threePitIgnore}, file)
     # print(f"Data")
     def trainTyreModel(self,
                       bool_driving: list or np.ndarray,
@@ -455,7 +461,7 @@ class VSE_SUPERVISED(object):
         lapno = tot_no_laps * raceprogress_prevlap
         #print("first", lapno)
         lapno = round(lapno, 0)
-        print("second", lapno)
+        print("lap:", lapno)
         #print(len(collected_data))
         #print(len(self.collected_data[1]))
         #print(i)
@@ -492,6 +498,7 @@ class VSE_SUPERVISED(object):
         #      pass
 
         #creates a dictionary with pit_no:pitlap, pit_no_2:pitlap, pit_no_3:pitlap
+        ign_dri_init = []
         for driver_idx,label in enumerate(newDict):
             #print(label)
             #print(driver_idx)
@@ -508,7 +515,8 @@ class VSE_SUPERVISED(object):
                     driver_pit_lap_nos[label + "_3"] = (lapindex[0], lapindex[1])
                     pit_lap_nos.append(lapindex[0])
                 else: 
-                    print('DRIVER OVER 3 PITSTOPS REFER BACK TO 511 VSE SUPERVISED')
+                    ign_dri_init.append(label)
+                    #print('DRIVER OVER 3 PITSTOPS REFER BACK TO 511 VSE SUPERVISED')
                 #print(lapindex[0], ":", lapindex[1])
                 #print(lapindex[1])
             #print(self.collected_data)
@@ -552,7 +560,7 @@ class VSE_SUPERVISED(object):
             #print(collected_data)
             #print(driver_pit_lap_nos)
             print("test")
-            self.expData(driver_pit_lap_nos, collected_data, driver_order, avail_dry_compounds, tot_no_laps)
+            self.expData(driver_pit_lap_nos, collected_data, driver_order, avail_dry_compounds, tot_no_laps, ign_dri_init)
             
 
 # ----------------------------------------------------------------------------------------------------------------------
