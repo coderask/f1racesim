@@ -7,6 +7,11 @@ import os
 #load data in 
 with open("racesim/src/expData/expDataCat2019.pkl", 'rb') as file:
     data = pickle.load(file)
+with open("racesim/src/ccModelRecreation/driver_idx_t10.pkl", 'rb') as file:
+    driver_idx_t10 = pickle.load(file)
+with open("racesim/src/ccModelRecreation/SqlOrder.pkl", 'rb') as file:
+    sqlOrder = pickle.load(file)
+
 #dictionary with {driver intials: (lapnumber, compound)}
 pits = data['pits']
 #collected X_conv_cc stored as {lapnumber : {driver : input}} or for multiple drivers {lapnumber : [{driver1, input1}, {driver2, input2}]}
@@ -21,12 +26,13 @@ avail = data["avail"]
 tLaps = data["totLaps"]
 #drivers to ignore because they did too many pitstops 
 ignPit = data["threePitIgnore"]
-# print(tLaps)
+# print("total laps", tLaps)
 # print(pits)
 # # print("\n")
-# # print(inp)
+# print(inp[1])
 # print("\n")
-# print(order)
+print(order)
+print(driver_idx_t10)
 # print(ignPit)
 # check if inputs already exist, if not make blank ones
 if os.path.exists('a racesim/src/ccModelRecreation/inputs.pkl'):
@@ -118,8 +124,7 @@ ccModel.compile(optimizer=tf.keras.optimizers.Nadam(),
 #loop through every lap
 for lap in inp:
     lap = round(lap, 0)
-    print(lap)
-    #loop through every driver for each lap 
+    #loop through every driver for each lap
     for driver in inp[lap]:
       #print(driver)
       #go through drivers one-by-one
@@ -129,16 +134,25 @@ for lap in inp:
      #    print("d", driverIdx)
         # go through all the real pit data
         for driverInitPit in pits:
-          print(pits[driverInitPit])
+          
+        #   print(pits[driverInitPit])
           #find the inital corresponding to the current driver
           #if the inital is to be ignored due to 3 pitstops, pass over it 
           if order[driverIdx] in ignPit:
+            print(lap)
+            print("entred 3 pit ignore for: ", order[driverIdx])
             pass
           else: 
+            #find the inital corresponding to the current driver
+            #print(driverInitPit)
             if order[driverIdx] in driverInitPit:
+                # print(lap)
+                # print("entred loop for:", driverInitPit)
+
                 # print("driverInitPit:", driverInitPit)
                 #is cur_lap same as pit and not start of race 
                 if lap == pits[driverInitPit][0] and lap != 0:
+                    # print(pits[driverInitPit])
                     trunc_inp.append(driver[driverIdx])
                     label.append(encode_compounds(pits[driverInitPit][1]))
                #     print(pits[driverInitPit][1])
@@ -178,6 +192,39 @@ for lap in inp:
 #     print(inputInd)
 #     print(labelInd)
 
+
+# thought there was a problem with loop so rewrote
+# for lap, find driver input dict, for driver input dict, find driver index, for driver index, check if driver pits, if driver pits append. 
+# for lap in inp: 
+#     for driver in inp[lap]:
+#         for driverIdx in driver:
+#             for driverInitPit in pits:
+                
+#                 if order[driverIdx]+"_3" in driverInitPit:
+#                     if lap == pits[driverInitPit][0] and lap != 0 and lap<32:
+#                         print(lap, order[driverIdx],driverInitPit, pits[driverInitPit][0])
+#                         # print(order[driverIdx], lap, pits[driverInitPit][1])
+#                         trunc_inp.append(driver[driverIdx])
+#                         label.append(encode_compounds(pits[driverInitPit][1]))
+#                 elif order[driverIdx]+"_2" in driverInitPit:
+#                     if lap == pits[driverInitPit][0] and lap != 0 and lap<32:
+#                         print(lap, order[driverIdx],driverInitPit, pits[driverInitPit][0])
+#                         # print(lap, order[driverIdx]+"_2", driverInitPit)
+#                         trunc_inp.append(driver[driverIdx])
+#                         label.append(encode_compounds(pits[driverInitPit][1]))
+#                 elif order[driverIdx] in driverInitPit:
+#                     # print(lap, order[driverIdx],driverInitPit, pits[driverInitPit][0])
+#                     if lap == pits[driverInitPit] and lap!= 0 and lap<32:
+#                         print(lap, order[driverIdx],driverInitPit, pits[driverInitPit][0])
+#                         # print(lap, order[driverIdx], driverInitPit)
+#                         trunc_inp.append(driver[driverIdx])
+#                         label.append(encode_compounds(pits[driverInitPit][1]))
+#                 else:
+#                     pass
+#                     # print("after third pit:", order[driverIdx])
+                        
+
+
 #collect data for tyre training model 
 
 # save inputs for this race instance 
@@ -189,9 +236,9 @@ with open('racesim/src/ccModelRecreation/labels.pkl', 'wb') as file:
 
 # print(trunc_inp)
 # print(label)
-print(tc_label)
-print(len(trunc_inp))       
-print(len(label))
+# print(tc_label)
+# print(len(trunc_inp))          
+# print(len(label))
 # print(len(tc_label))
 # print(len(tc_input))
 

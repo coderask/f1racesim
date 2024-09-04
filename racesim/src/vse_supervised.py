@@ -74,12 +74,18 @@ class VSE_SUPERVISED(object):
 
     with open('racesim/src/ccModelRecreation/lapdict.pkl', 'rb') as pikle:
         lapdict = pickle.load(pikle)
-    print(lapdict)
-
+    #print(lapdict)
+    with open('racesim/src/ccModelRecreation/driver_idx_t10.pkl', 'rb') as driverIdxFile:
+        driver_idx_t10 = pickle.load(driverIdxFile)
+    global sqlOrder
+    with open('racesim/src/ccModelRecreation/SqlOrder.pkl', 'rb') as orderFile:
+        sqlOrder = pickle.load(orderFile)
+    print("sqlOrder:", sqlOrder)
+    
     # ------------------------------------------------------------------------------------------------------------------
     # CONSTRUCTOR ------------------------------------------------------------------------------------------------------
     # ------------------------------------------------------------------------------------------------------------------
-
+ 
     def __init__(self,
                  preprocessor_cc_path: str,
                  preprocessor_tc_path: str,
@@ -461,7 +467,7 @@ class VSE_SUPERVISED(object):
         lapno = tot_no_laps * raceprogress_prevlap
         #print("first", lapno)
         lapno = round(lapno, 0)
-        print("lap:", lapno)
+        #print("lap:", lapno)
         #print(len(collected_data))
         #print(len(self.collected_data[1]))
         #print(i)
@@ -530,13 +536,25 @@ class VSE_SUPERVISED(object):
 
         #deciphering index of inputs
         #uses only lap 0 because that matches grid positions 
+        #list with tuples mapping the vse driver# to the sql driver#
+        indexMAP = []
         if lapno == 0.0:
             #consider each entry of positions(follows same indexing as self.X_conv_tc/cc)
             for idx, pos in enumerate(positions):
                 for label in driver_pars_dict["driver_pars"]:
+                    for entry in sqlOrder:
+                        print(entry[1], label)
+                        if entry[1] == label:
+                            indexMAP.append((idx, entry[0]))
                     #print("p_grid:", driver_pars_dict["driver_pars"][label]["p_grid"])
                     if driver_pars_dict["driver_pars"][label]['p_grid'] == pos:
                         driver_order[idx] = label
+                        # print(label)
+            mapsort= list(set(indexMAP))
+            print("mapsort:", len(mapsort))
+            print("indexMAP:", len(indexMAP))
+            print("driver_order:", len(driver_order))
+            print("indexMAP data:", indexMAP)
         #print("Driver order:", driver_order)
 
 
@@ -559,7 +577,7 @@ class VSE_SUPERVISED(object):
             #print(final_dataset[65])
             #print(collected_data)
             #print(driver_pit_lap_nos)
-            print("test")
+            #print("test")
             self.expData(driver_pit_lap_nos, collected_data, driver_order, avail_dry_compounds, tot_no_laps, ign_dri_init)
             
 

@@ -64,7 +64,48 @@ for entry in lapquery:
 for pit in pitquery:
     lapdict[pit[1]] = pit[3]
 
+t10_query = '''
+WITH race_info AS (
+    SELECT nolaps
+    FROM races
+    WHERE id = ?
+),
+final_lap_positions AS (
+    SELECT driver_id, position
+    FROM laps
+    WHERE race_id = ? AND lapno = (SELECT nolaps FROM race_info)
+)
+SELECT driver_id, position
+FROM final_lap_positions
+ORDER BY position ASC
+LIMIT 10;
+'''
+read.execute(t10_query, (desir_race_id, desir_race_id))
+
+t10= read.fetchall()
+#print(t10)
+
+driver_idx_t10 = []
+for entry in t10:
+    driver_idx_t10.append(entry[0])
+
+# print(driver_idx_t10)
+
+order_query = '''
+SELECT id, initials
+FROM drivers;
+'''
+read.execute(order_query)
+
+sqlOrder = read.fetchall()
+
+print(sqlOrder)
+
 conn.close()
 
 with open('racesim/src/ccModelRecreation/lapdict.pkl', 'wb') as lapDictFile:
     pkl.dump(lapdict, lapDictFile)
+with open('racesim/src/ccModelRecreation/driver_idx_t10.pkl', 'wb') as driverIdxFile:
+    pkl.dump(driver_idx_t10, driverIdxFile) 
+with open('racesim/src/ccModelRecreation/SqlOrder.pkl', 'wb') as orderFile:
+    pkl.dump(sqlOrder, orderFile)
