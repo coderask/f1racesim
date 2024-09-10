@@ -285,9 +285,8 @@ class VSE_SUPERVISED(object):
             if not bool_driving[idx_driver]:
                 continue
             #following their preprocessing reqs
-            if(position[idx_driver] <= 10):
-                cur_dict.append({idx_driver : self.X_conv_cc[idx_driver]})
-                collected_data[lapno] = cur_dict    
+            cur_dict.append({idx_driver : self.X_conv_cc[idx_driver]})
+            collected_data[lapno] = cur_dict    
             # set NN input
             self.nnmodel_tc["interpreter"].set_tensor(self.nnmodel_tc["input_index"],
                                                       np.expand_dims(self.X_conv_tc[idx_driver], axis=0))
@@ -445,10 +444,12 @@ class VSE_SUPERVISED(object):
         #print("I to the model", self.collected_data)
         #driverchoices = [["A4", "A3", "A4"], ]
         return next_compounds
-    def expData(self, pits, collected_data, dOrder, ac, tl, threePitIgnore):
+    def expData(self, pits, collected_data, dOrder, ac, tl, threePitIgnore, sqlOrderMap):
         with open('racesim/src/expData/expDataCat2019.pkl', 'wb') as file:
-            pickle.dump({'pits': pits, 'collected_data': collected_data, "driver_order" : dOrder, "avail" : ac, "totLaps" : tl, "threePitIgnore" : threePitIgnore}, file)
+            print("recieved sqlOrderMap", sqlOrderMap)
+            pickle.dump({'pits': pits, 'collected_data': collected_data, "driver_order" : dOrder, "avail" : ac, "totLaps" : tl, "threePitIgnore" : threePitIgnore, 'sqlOrderMap' : sqlOrderMap}, file)
     # print(f"Data")
+    # savedMap = []
     def trainTyreModel(self,
                       bool_driving: list or np.ndarray,
                       avail_dry_compounds: list,
@@ -459,6 +460,7 @@ class VSE_SUPERVISED(object):
                       raceprogress_prevlap: float,
                       driver_intials: str,
                       positions: list):
+        # global savedMap
         global prev_collected_data  
         #contains all the collected inputs to the cc model in a dictionary s.t {lapnumber : {driverno: input}}} or {lapnumber: [{driverno1:input}, {driverno2: input}]}
         global collected_data  
@@ -503,7 +505,7 @@ class VSE_SUPERVISED(object):
         #      print("\n")
         #      pass
 
-        #creates a dictionary with pit_no:pitlap, pit_no_2:pitlap, pit_no_3:pitlap
+        #should list all driver indices with more than 3 pitstops 
         ign_dri_init = []
         for driver_idx,label in enumerate(newDict):
             #print(label)
@@ -538,23 +540,37 @@ class VSE_SUPERVISED(object):
         #uses only lap 0 because that matches grid positions 
         #list with tuples mapping the vse driver# to the sql driver#
         indexMAP = []
-        if lapno == 0.0:
+        savedMap = []
+        driver_order_byIndex = {}
+        if lapno == 0.0 and len(positions) > 1:
             #consider each entry of positions(follows same indexing as self.X_conv_tc/cc)
             for idx, pos in enumerate(positions):
                 for label in driver_pars_dict["driver_pars"]:
-                    for entry in sqlOrder:
-                        print(entry[1], label)
-                        if entry[1] == label:
-                            indexMAP.append((idx, entry[0]))
-                    #print("p_grid:", driver_pars_dict["driver_pars"][label]["p_grid"])
+                    print("p_grid:", driver_pars_dict["driver_pars"][label]["p_grid"])
+                    print("pos:", pos)
                     if driver_pars_dict["driver_pars"][label]['p_grid'] == pos:
                         driver_order[idx] = label
+                        driver_order_byIndex[label] = idx
+                        print(label, idx)
+            # print(positions)        
+            # print(driver_order_byIndex)
+            for label in driver_pars_dict["driver_pars"]:
+                for entry in sqlOrder:
+                        if entry[1] == label:
+                            print(entry[1], label)
+                            #vse index, sql index
+                            indexMAP.append((driver_order_byIndex[label], entry[0]))
                         # print(label)
-            mapsort= list(set(indexMAP))
-            print("mapsort:", len(mapsort))
-            print("indexMAP:", len(indexMAP))
-            print("driver_order:", len(driver_order))
-            print("indexMAP data:", indexMAP)
+            # mapsort= list(set(indexMAP))
+            # print("mapsort:", len(mapsort))
+            # print("indexMAP:", len(indexMAP))
+            # print("driver_order:", len(driver_order))
+            # print("indexMAP data:", indexMAP)
+            savedMap = indexMAP
+            with open('racesim/src/expData/savedIndexMapping.pkl', 'wb') as file:
+                pickle.dump(savedMap, file)
+        print("savedMap:", savedMap)
+
         #print("Driver order:", driver_order)
 
 
@@ -578,8 +594,8 @@ class VSE_SUPERVISED(object):
             #print(collected_data)
             #print(driver_pit_lap_nos)
             #print("test")
-            self.expData(driver_pit_lap_nos, collected_data, driver_order, avail_dry_compounds, tot_no_laps, ign_dri_init)
-            
+            self.expData(driver_pit_lap_nos, collected_data, driver_order, avail_dry_compounds, tot_no_laps, ign_dri_init, indexMAP)
+            # self.expData(driver_pit_lap_nos, collected_data, driver_order, avail_dry_compounds, tot_no_laps, ign_dri_init, indexMAP)
 
 # ----------------------------------------------------------------------------------------------------------------------
 # TESTING --------------------------------------------------------------------------------------------------------------

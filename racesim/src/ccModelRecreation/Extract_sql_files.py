@@ -109,3 +109,11 @@ with open('racesim/src/ccModelRecreation/driver_idx_t10.pkl', 'wb') as driverIdx
     pkl.dump(driver_idx_t10, driverIdxFile) 
 with open('racesim/src/ccModelRecreation/SqlOrder.pkl', 'wb') as orderFile:
     pkl.dump(sqlOrder, orderFile)
+if (lapdict):
+    with open('racesim/src/ccModelRecreation/lapquery.pkl', 'wb') as lapFile:
+        print("lapfile", lapdict)
+        pkl.dump(lapdict, lapFile)
+if (pitdict):
+    with open('racesim/src/ccModelRecreation/pitquery.pkl', 'wb') as pitFile:
+        print("pitfile", pitdict)
+        pkl.dump(pitdict, pitFile)

@@ -2,7 +2,7 @@ import pickle
 import tensorflow as tf 
 import numpy as np
 import os
-
+# from pathlib import path 
 '''DATA INTIALIZATION'''
 #load data in 
 with open("racesim/src/expData/expDataCat2019.pkl", 'rb') as file:
@@ -11,7 +11,18 @@ with open("racesim/src/ccModelRecreation/driver_idx_t10.pkl", 'rb') as file:
     driver_idx_t10 = pickle.load(file)
 with open("racesim/src/ccModelRecreation/SqlOrder.pkl", 'rb') as file:
     sqlOrder = pickle.load(file)
-
+with open("racesim/src/expData/savedIndexMapping.pkl", 'rb') as file:
+    indexMap = pickle.load(file)
+if(os.path.exists('racesim/src/ccModelRecreation/ignoreLongLaps.pkl')):
+    with open('racesim/src/ccModelRecreation/pitquery.pkl') as file: 
+        ignoreLongPits = pickle.load(file)
+else:
+    print("LONGPITS DNE ")
+if(os.path.exists('racesim/src/ccModelRecreation/lapquery.pkl')):
+    with open('racesim/src/ccModelRecreation/lapquery.pkl') as file:
+        ignoreLongLaps = pickle.load(file)
+else:
+    print("LONGLAPs DNE ")
 #dictionary with {driver intials: (lapnumber, compound)}
 pits = data['pits']
 #collected X_conv_cc stored as {lapnumber : {driver : input}} or for multiple drivers {lapnumber : [{driver1, input1}, {driver2, input2}]}
@@ -25,15 +36,21 @@ avail = data["avail"]
 #total laps 
 tLaps = data["totLaps"]
 #drivers to ignore because they did too many pitstops 
-ignPit = data["threePitIgnore"]
+ignPitThree = data["threePitIgnore"]
+
+#mapping of vse:sql driver indicies
+# indexMap = data["sqlOrderMap"]
 # print("total laps", tLaps)
 # print(pits)
 # # print("\n")
 # print(inp[1])
 # print("\n")
-print(order)
-print(driver_idx_t10)
-# print(ignPit)
+# print(order)
+# print(driver_idx_t10)
+# print("indexMap", indexMap)
+# print(ignPit) 
+# print(ignoreLongLaps) 
+# print(ignoreLongPits)
 # check if inputs already exist, if not make blank ones
 if os.path.exists('a racesim/src/ccModelRecreation/inputs.pkl'):
     with open('racesim/src/ccModelRecreation/inputs.pkl', 'rb') as file:
@@ -129,33 +146,41 @@ for lap in inp:
       #print(driver)
       #go through drivers one-by-one
       for driverIdx in driver: 
-     #    print("driverIdx:", driverIdx)
+        # print("driverIdx:", driverIdx)
         # print(driver)
      #    print("d", driverIdx)
         # go through all the real pit data
         for driverInitPit in pits:
-          
+          #map checking 
+          for mapped_pair in indexMap:
+            # print(driverInitPit, mapped_pair)
+            if driverIdx == mapped_pair[0]:
+                # print("enter map pair checking")
+                if mapped_pair[1] in driver_idx_t10:
+                    
+                    # print(f"driver idx {mapped_pair[1]} found in driver idx t10")
         #   print(pits[driverInitPit])
           #find the inital corresponding to the current driver
           #if the inital is to be ignored due to 3 pitstops, pass over it 
-          if order[driverIdx] in ignPit:
-            print(lap)
-            print("entred 3 pit ignore for: ", order[driverIdx])
-            pass
-          else: 
-            #find the inital corresponding to the current driver
-            #print(driverInitPit)
-            if order[driverIdx] in driverInitPit:
-                # print(lap)
-                # print("entred loop for:", driverInitPit)
-
-                # print("driverInitPit:", driverInitPit)
-                #is cur_lap same as pit and not start of race 
-                if lap == pits[driverInitPit][0] and lap != 0:
-                    # print(pits[driverInitPit])
-                    trunc_inp.append(driver[driverIdx])
-                    label.append(encode_compounds(pits[driverInitPit][1]))
-               #     print(pits[driverInitPit][1])
+                    if order[driverIdx] in ignPit:
+                        # print(lap)
+                        print("entred 3 pit ignore for: ", order[driverIdx])
+                        pass
+                    else: 
+                        #find the inital corresponding to the current driver
+                        #print(driverInitPit)
+                        if order[driverIdx] in driverInitPit:
+                            # print(lap)
+                            # print("entred loop for:", driverInitPit)
+                            # print("driverInitPit:", driverInitPit)
+                            #is cur_lap same as pit and not start of race 
+                            if lap == pits[driverInitPit][0] and lap != 0:
+                                # print(pits[driverInitPit])
+                                # print(driverInitPit, lap, driverIdx, mapped_pair[1])
+                                print(lap,driverInitPit,mapped_pair[1],driverIdx)
+                                trunc_inp.append(driver[driverIdx])
+                                label.append(encode_compounds(pits[driverInitPit][1]))
+                #     print(pits[driverInitPit][1])
                #     print(encode_compounds(pits[driverInitPit][1])
                    #print(f"{driver[driverIdx]} is the input on {lap} for {order[driverIdx]} pitstop and {encode_compounds(pits[driverInitPit][1])} is the label")
                #     print(inp[lap][driver][])
@@ -235,10 +260,10 @@ with open('racesim/src/ccModelRecreation/labels.pkl', 'wb') as file:
     pickle.dump(label, file)
 
 # print(trunc_inp)
-# print(label)
+print("label", label)
 # print(tc_label)
 # print(len(trunc_inp))          
-# print(len(label))
+print(len(label))
 # print(len(tc_label))
 # print(len(tc_input))
 
