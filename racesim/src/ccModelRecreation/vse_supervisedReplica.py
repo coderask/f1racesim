@@ -162,7 +162,7 @@ for lap in inp:
         #   print(pits[driverInitPit])
           #find the inital corresponding to the current driver
           #if the inital is to be ignored due to 3 pitstops, pass over it 
-                    if order[driverIdx] in ignPit:
+                    if order[driverIdx] in ignPitThree:
                         # print(lap)
                         print("entred 3 pit ignore for: ", order[driverIdx])
                         pass
