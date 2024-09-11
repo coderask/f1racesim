@@ -23,6 +23,8 @@ if(os.path.exists('racesim/src/ccModelRecreation/lapquery.pkl')):
         ignoreLongLaps = pickle.load(file)
 else:
     print("LONGLAPs DNE ")
+with open('racesim/src/ccModelRecreation/used_race_ids.pkl', 'rb') as file:
+    used_race_ids = pickle.load(file)
 #dictionary with {driver intials: (lapnumber, compound)}
 pits = data['pits']
 #collected X_conv_cc stored as {lapnumber : {driver : input}} or for multiple drivers {lapnumber : [{driver1, input1}, {driver2, input2}]}
@@ -52,7 +54,7 @@ ignPitThree = data["threePitIgnore"]
 # print(ignoreLongLaps) 
 # print(ignoreLongPits)
 # check if inputs already exist, if not make blank ones
-if os.path.exists('a racesim/src/ccModelRecreation/inputs.pkl'):
+if os.path.exists('racesim/src/ccModelRecreation/inputs.pkl'):
     with open('racesim/src/ccModelRecreation/inputs.pkl', 'rb') as file:
         trunc_inp = pickle.load(file)
         # trunc_inp = []
@@ -60,7 +62,7 @@ if os.path.exists('a racesim/src/ccModelRecreation/inputs.pkl'):
 else:
     trunc_inp = []
 
-if os.path.exists('a racesim/src/ccModelRecreation/labels.pkl'):
+if os.path.exists('racesim/src/ccModelRecreation/labels.pkl'):
     with open('racesim/src/ccModelRecreation/labels.pkl', 'rb') as file:
         label = pickle.load(file)
         # label = []
