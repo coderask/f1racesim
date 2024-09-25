@@ -58,15 +58,16 @@ folds = sklearn.model_selection.KFold(n_splits=10, shuffle=True, random_state=42
 trainRaces = []
 valRaces = []
 for train_index, val_index in folds.split(train):
-    trainRaces.append(train[train_index])
-    valRaces.append(train[val_index])
+    trainRaces.append(raceNames[i] for i in train_index)
+    valRaces.append(raceNames[i] for i in val_index)
     print("TRAIN:", train_index, "validate:", val_index)
+print(trainRaces, valRaces)
 #modify all relavent files to collect data for this split 
-# for race in trainRaces:
+for race in trainRaces:
     modify_file('main_racesim.py', '259', "race_pars_file_ = " + race.split('racesim/input/parameters/')[-1]  + '\n')
     modify_file('racesim/src/vse_supervised.py', "47", "path = " + race.split('racesim/input/parameters/')[-1]  + '\n')
     modify_file('racesim/src/ccModelRecreation/Extract_sql_files.py', "6", "racePath = " + race.split('racesim/input/parameters/')[-1]  + '\n')
     run_script('main_racesim.py')
     run_script('Extract_sql_files.py')
-#     run_script('racesim/src/ccModelRecreation/vse_supervisedReplica.py')
+    run_script('racesim/src/ccModelRecreation/vse_supervisedReplica.py')
 

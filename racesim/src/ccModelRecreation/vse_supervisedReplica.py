@@ -278,19 +278,13 @@ for lap in inp:
 #collect data for tyre training model 
 
 # save inputs for this race instance 
+# print(trunc_inp)
+# print(label)
 with open('racesim/src/ccModelRecreation/inputs.pkl', 'wb') as file:
     pickle.dump(trunc_inp, file)
 with open('racesim/src/ccModelRecreation/labels.pkl', 'wb') as file:
     #print("saved label", label)
     pickle.dump(label, file)
-
-
-
-
-
-
-
-
 
 # print(trunc_inp)
 # print("label", label)
@@ -299,15 +293,27 @@ with open('racesim/src/ccModelRecreation/labels.pkl', 'wb') as file:
 # print(len(label))
 # print(len(tc_label))
 # print(len(tc_input))
-
 input = np.array(trunc_inp)
-print("Input", input)
+print("Input", input.shape)
 labels = np.array(label)
-# # print(labels)
+print(labels.shape)
+if os.path.exists('racesim/src/ccModelRecreation/dumped_data.pkl'):
+    with open('racesim/src/ccModelRecreation/dumped_data.pkl', 'rb') as f:
+        all_data = pickle.load(f)
+    merged_data = np.concatenate([input.flatten(), labels.flatten()])
+    all_data.append(merged_data)
+    with open('racesim/src/ccModelRecreation/dumped_data.pkl', 'wb') as f:
+        pickle.dump(all_data, f)
+else:
+    merged_data = np.concatenate([input.flatten(), labels.flatten()])
+    with open('racesim/src/ccModelRecreation/dumped_data.pkl', 'wb') as f:
+        pickle.dump(merged_data, f)
+print("merged_data", merged_data)
+
 # input = input.reshape(input.shape[0], -1)
 
-if os.path.exists('racesim/src/ccModelRecreation/ccModel.weights.h5'):
-    ccModel.load_weights("racesim/src/ccModelRecreation/ccShanghai2019.weights.h5")
-# '''running 48 epochs on catulyna stablizes at 65% ish, more epochs doesnt seem to help'''
-ccModel.fit(input, labels, epochs=2000, validation_data=(input, labels), verbose = 1)
-ccModel.save_weights("racesim/src/ccModelRecreation/ccModel.weights.h5")
+# if os.path.exists('racesim/src/ccModelRecreation/ccModel.weights.h5'):
+#     ccModel.load_weights("racesim/src/ccModelRecreation/ccShanghai2019.weights.h5")
+# # '''running 48 epochs on catulyna stablizes at 65% ish, more epochs doesnt seem to help'''
+# ccModel.fit(input, labels, epochs=2000, validation_data=(input, labels), verbose = 1)
+# ccModel.save_weights("racesim/src/ccModelRecreation/ccModel.weights.h5")
