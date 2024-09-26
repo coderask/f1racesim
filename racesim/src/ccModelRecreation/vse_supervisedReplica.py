@@ -202,7 +202,7 @@ for lap in inp:
                             if lap == pits[driverInitPit][0] and lap != 0:
                                 # print(pits[driverInitPit])
                                 # print(driverInitPit, lap, driverIdx, mapped_pair[1])
-                                print(lap,driverInitPit,mapped_pair[1],driverIdx)
+                                # print(lap,driverInitPit,mapped_pair[1],driverIdx)
                                 trunc_inp.append(driver[driverIdx])
                                 label.append(encode_compounds(pits[driverInitPit][1]))
                 #     print(pits[driverInitPit][1])
@@ -293,27 +293,80 @@ with open('racesim/src/ccModelRecreation/labels.pkl', 'wb') as file:
 # print(len(label))
 # print(len(tc_label))
 # print(len(tc_input))
+#collect all data for training
 input = np.array(trunc_inp)
-print("Input", input.shape)
+# print("Input", input.shape)
 labels = np.array(label)
-print(labels.shape)
-if os.path.exists('racesim/src/ccModelRecreation/dumped_data.pkl'):
-    with open('racesim/src/ccModelRecreation/dumped_data.pkl', 'rb') as f:
-        all_data = pickle.load(f)
-    merged_data = np.concatenate([input.flatten(), labels.flatten()])
-    all_data.append(merged_data)
-    with open('racesim/src/ccModelRecreation/dumped_data.pkl', 'wb') as f:
-        pickle.dump(all_data, f)
-else:
-    merged_data = np.concatenate([input.flatten(), labels.flatten()])
-    with open('racesim/src/ccModelRecreation/dumped_data.pkl', 'wb') as f:
-        pickle.dump(merged_data, f)
-print("merged_data", merged_data)
+# print(labels.shape)
 
-# input = input.reshape(input.shape[0], -1)
+'''uncomment all of this to run colelction '''
+# merged_data = np.concatenate([input, labels], axis = 1)
+# # print(merged_data.shape)
+# if os.path.exists('racesim/src/ccModelRecreation/dumped_data.pkl'):
+#     print('''************************************************************************************
+#           ************************************************''')
+#     with open('racesim/src/ccModelRecreation/dumped_data.pkl', 'rb') as f:
+#         all_data = pickle.load(f)
+#         print("HERE IS THE LOADED DATA LENGTH:", len(all_data))
+# else:
+#     all_data = []
+# all_data.append(merged_data)
+# with open('racesim/src/ccModelRecreation/dumped_data.pkl', 'wb') as f:
+#     pickle.dump(all_data, f)
 
-# if os.path.exists('racesim/src/ccModelRecreation/ccModel.weights.h5'):
-#     ccModel.load_weights("racesim/src/ccModelRecreation/ccShanghai2019.weights.h5")
-# # '''running 48 epochs on catulyna stablizes at 65% ish, more epochs doesnt seem to help'''
-# ccModel.fit(input, labels, epochs=2000, validation_data=(input, labels), verbose = 1)
-# ccModel.save_weights("racesim/src/ccModelRecreation/ccModel.weights.h5")
+
+'''uncomment all of this to run colelction '''
+
+
+# #get all data back 
+training_inputs = []
+training_labels = []
+validation_inputs = []
+validation_labels = []
+
+# with open('racesim/src/ccModelRecreation/dumped_training_data.pkl', 'rb') as f:
+#     all_training_data = pickle.load(f)
+#     print(len(all_training_data))
+#     print(all_training_data[0].shape)
+
+'''UNCOMMENT FOR DATA INTO LABELS AND INPUTS'''
+with open('racesim/src/ccModelRecreation/trainings.pkl', 'rb') as f:
+    training_indicies = pickle.load(f)
+with open('racesim/src/ccModelRecreation/validations.pkl', 'rb') as f:
+    validation_indicies = pickle.load(f)
+with open('racesim/src/ccModelRecreation/dumped_data.pkl', 'rb') as f:
+    nonNumpyValidationData = pickle.load(f)
+print(nonNumpyValidationData[0])    
+# for tr_idx in training_indicies[0]:
+training_inputs.append(nonNumpyValidationData[0])
+print(training_inputs)
+# all_validation_data = np.concatenate(nonNumpyValidationData,axis = 1)
+# training_inputs = np.array(training_inputs)
+# training_inputs = np.concatenate(training_inputs, axis = 1)
+# print(training_inputs.shape)
+# print(all_validation_data)
+# print(all_validation_data.shape)    
+print(nonNumpyValidationData[0].shape)
+
+# # for merged_data in all_training_data:
+# #     # print("merged data size", merged_data.shape)
+# #     input = merged_data[:34]
+# #     labels = merged_data[34:]
+# #     # print("labels", len(labels))
+# #     training_inputs.append(input)
+# #     training_labels.append(labels)
+# print(all_validation_data.shape)
+# # print(np.concatenate(all_validation_data, axis = 0).shape)
+# input = all_validation_data[:,:34]
+# labels = all_validation_data[:,34:]
+# validation_inputs.append(input)
+# validation_labels.append(labels)
+# # print(len(training_inputs))
+# # print(len(training_labels))
+# print(input.shape)
+# print(labels.shape)
+
+# if os.path.exists('racesim/src/ccModelRecreation/ccModel_set1.weights.h5'):
+#     ccModel.load_weights("racesim/src/ccModelRecreation/ccModel_set1.weights.h5")
+# ccModel.fit(training_inputs, training_labels, epochs=2000, validation_data=(validation_inputs, validation_labels), verbose = 1)
+# ccModel.save_weights("racesim/src/ccModelRecreation/ccModel_set1.weights.h5")
