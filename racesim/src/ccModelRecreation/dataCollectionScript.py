@@ -82,89 +82,99 @@ for train_index, val_index in folds.split(train):
     # valRaces.append(raceNames[i] for i in val_index)
     # print(raceNames[i] for i in train_index)
     # print(raceNames[i] for i in val_index)
+    
     def switch(indexing):
+
         if indexing == 1:
             for i in train_index:
-                trainRacesSet1.append(train[i])
+                trainRacesSet1.append(i)
             for i in val_index:
-                valRacesSet1.append(train[i])
+                valRacesSet1.append(i)
             indexing+=1 
             
         elif indexing == 2:
             print("entered set 2")
             for i in train_index:
-                trainRacesSet2.append(train[i])
+                trainRacesSet2.append(i)
             for i in val_index:
-                valRacesSet2.append(train[i])
+                valRacesSet2.append(i)
             indexing+=1 
             
         elif indexing == 3:
             for i in train_index:
-                trainRacesSet3.append(train[i])
+                trainRacesSet3.append(i)
             for i in val_index:
-                valRacesSet3.append(train[i])
+                valRacesSet3.append(i)
             indexing+=1
             
         elif indexing == 4:
             for i in train_index:
-                trainRacesSet4.append(train[i])
+                trainRacesSet4.append(i)
             for i in val_index:
-                valRacesSet4.append(train[i])
+                valRacesSet4.append(i)
             indexing+=1
             
         elif indexing == 5:
             for i in train_index:
-                trainRacesSet5.append(train[i])
+                trainRacesSet5.append(i)
             for i in val_index:
-                valRacesSet5.append(train[i])
+                valRacesSet5.append(i)
             indexing+=1
             
         elif indexing == 6:
             for i in train_index:
-                trainRacesSet6.append(train[i])
+                trainRacesSet6.append(i)
             for i in val_index:
-                valRacesSet6.append(train[i])
+                valRacesSet6.append(i)
             indexing+=1
             
         elif indexing == 7:
             for i in train_index:
-                trainRacesSet7.append(train[i])
+                trainRacesSet7.append(i)
             for i in val_index:
-                valRacesSet7.append(train[i])
+                valRacesSet7.append(i)
             indexing+=1
             
         elif indexing == 8:
             for i in train_index:
-                trainRacesSet8.append(train[i])
+                trainRacesSet8.append(i)
             for i in val_index:
-                valRacesSet8.append(train[i])
+                valRacesSet8.append(i)
             indexing+=1
             
         elif indexing == 9:
             for i in train_index:
-                trainRacesSet9.append(train[i])
+                trainRacesSet9.append(i)
             for i in val_index:
-                valRacesSet9.append(train[i])
+                valRacesSet9.append(i)
             indexing+=1
             
         elif indexing == 10:
             for i in train_index:
-                trainRacesSet10.append(train[i])
+                trainRacesSet10.append(i)
             for i in val_index:
-                valRacesSet10.append(train[i])
+                valRacesSet10.append(i)
             indexing+=1
         return indexing     
     indexing = switch(indexing)
-print(len(trainRacesSet1))
-print(len(valRacesSet1))
-print(len(trainRacesSet2))
-print(len(valRacesSet2))
-print(len(trainRacesSet3))
-print(len(valRacesSet3))
-print(len(trainRacesSet4))
-print(len(valRacesSet4))
-print(len(trainRacesSet5))
-print(len(valRacesSet5))
+trainings = [trainRacesSet1, trainRacesSet2, trainRacesSet3, trainRacesSet4, trainRacesSet5, trainRacesSet6, trainRacesSet7, trainRacesSet8, trainRacesSet9, trainRacesSet10]
+validations = [valRacesSet1, valRacesSet2, valRacesSet3, valRacesSet4, valRacesSet5, valRacesSet6, valRacesSet7, valRacesSet8, valRacesSet9, valRacesSet10]
+with open('racesim/src/ccModelRecreation/trainings.pkl', 'wb') as file:
+    pkl.dump(trainings, file)
+with open('racesim/src/ccModelRecreation/validations.pkl', 'wb') as file:
+    pkl.dump(validations, file)
+
+
+# print(trainRacesSet1[1])
+# print(len(valRacesSet1))
+# print(len(trainRacesSet2))
+# print(len(valRacesSet2))
+# print(len(trainRacesSet3))
+# print(len(valRacesSet3))
+# print(len(trainRacesSet4))
+# print(len(valRacesSet4))
+# print(len(trainRacesSet5))
+# print(len(valRacesSet5))
 # print("\n")
 # print("trainraces", trainRaces, len(trainRaces))
 # print("\n")
@@ -173,11 +183,12 @@ print(len(valRacesSet5))
     # print("TRAIN:", train_index, "validate:", val_index)
 # print(trainRaces, valRaces)
 #modify all relavent files to collect data for this split 
-# for race in trainRaces:
+# print(len(raceNames))
+# for race in raceNames:
 #     modify_file('main_racesim.py', '259', "race_pars_file_ = " + race.split('racesim/input/parameters/')[-1]  + '\n')
 #     modify_file('racesim/src/vse_supervised.py', "47", "path = " + race.split('racesim/input/parameters/')[-1]  + '\n')
 #     modify_file('racesim/src/ccModelRecreation/Extract_sql_files.py', "6", "racePath = " + race.split('racesim/input/parameters/')[-1]  + '\n')
 #     run_script('main_racesim.py')
-#     run_script('Extract_sql_files.py')
+#     run_script('racesim/src/ccModelRecreation/Extract_sql_files.py')
 #     run_script('racesim/src/ccModelRecreation/vse_supervisedReplica.py')
 

@@ -35,7 +35,7 @@ order = data['driver_order']
 # print(order)
 #available compounds 
 avail = data["avail"]
-print(avail)
+# print(avail)
 #total laps 
 tLaps = data["totLaps"]
 #drivers to ignore because they did too many pitstops 

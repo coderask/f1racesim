@@ -15,6 +15,7 @@ query = "SELECT id, location, season FROM races"
 #returns tuple of ('racename', year(int))
 def findrace(path_to_race):
    
+
     newstring = path_to_race.split("pars_")
 
     #after "pars_"
@@ -99,7 +100,7 @@ read.execute(order_query)
 
 sqlOrder = read.fetchall()
 
-print(sqlOrder)
+# print(sqlOrder)
 
 conn.close()
 
