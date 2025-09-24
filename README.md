@@ -1,3 +1,7 @@
+This is my personal improvement to the original VSE improved paper(Readme below) published in 2020.
+
+
+
 # Introduction
 This repository contains a race simulation for the simulation of motorsport circuit races. The intended application is
 the determination of an appropriate race strategy, i.e. of the pit stops (number of stops, inlaps, tire compound choice,
